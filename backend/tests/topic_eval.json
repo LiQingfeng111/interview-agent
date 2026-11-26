@@ -1,0 +1,329 @@
+{
+  "total_topics": 32,
+  "top1_accuracy": 0.71875,
+  "topic_hit_rate": 0.8125,
+  "empty_topics": [],
+  "low_score_topics": [],
+  "details": [
+    {
+      "role": "agent_app",
+      "topic": "上下文工程",
+      "count": 33,
+      "query": "长上下文怎么组织提示词",
+      "best_own_score": 0.595,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 110
+    },
+    {
+      "role": "agent_app",
+      "topic": "评测与幻觉",
+      "count": 24,
+      "query": "怎么评估模型输出有没有幻觉",
+      "best_own_score": 0.588,
+      "top1_is_own": true,
+      "hit_in_topk": 3,
+      "usable_after_threshold": 131
+    },
+    {
+      "role": "agent_app",
+      "topic": "结构化输出",
+      "count": 24,
+      "query": "怎么让模型稳定输出 JSON",
+      "best_own_score": 0.629,
+      "top1_is_own": true,
+      "hit_in_topk": 4,
+      "usable_after_threshold": 126
+    },
+    {
+      "role": "agent_app",
+      "topic": "多 Agent 编排",
+      "count": 23,
+      "query": "多个 Agent 怎么协作分工",
+      "best_own_score": 0.668,
+      "top1_is_own": true,
+      "hit_in_topk": 4,
+      "usable_after_threshold": 114
+    },
+    {
+      "role": "agent_app",
+      "topic": "工具与沙箱",
+      "count": 21,
+      "query": "工具执行怎么隔离保证安全",
+      "best_own_score": 0.636,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 113
+    },
+    {
+      "role": "agent_app",
+      "topic": "Agent",
+      "count": 12,
+      "query": "Agent 和普通调用模型有什么区别",
+      "best_own_score": 0.622,
+      "top1_is_own": false,
+      "hit_in_topk": 1,
+      "usable_after_threshold": 112
+    },
+    {
+      "role": "agent_app",
+      "topic": "Agent 评估",
+      "count": 6,
+      "query": "怎么评估 Agent 好不好用",
+      "best_own_score": 0.597,
+      "top1_is_own": false,
+      "hit_in_topk": 0,
+      "usable_after_threshold": 117
+    },
+    {
+      "role": "agent_app",
+      "topic": "Agent 工具调用",
+      "count": 2,
+      "query": "Agent 调用工具失败怎么重试",
+      "best_own_score": 0.524,
+      "top1_is_own": false,
+      "hit_in_topk": 0,
+      "usable_after_threshold": 128
+    },
+    {
+      "role": "ai_algo",
+      "topic": "RAG 检索增强生成",
+      "count": 35,
+      "query": "RAG 的检索流程是怎样的",
+      "best_own_score": 0.631,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 58
+    },
+    {
+      "role": "ai_algo",
+      "topic": "评测与幻觉",
+      "count": 31,
+      "query": "怎么评估模型输出有没有幻觉",
+      "best_own_score": 0.697,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 131
+    },
+    {
+      "role": "ai_algo",
+      "topic": "微调与 LoRA",
+      "count": 28,
+      "query": "LoRA 微调是怎么做的，参数量多少",
+      "best_own_score": 0.695,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 81
+    },
+    {
+      "role": "ai_algo",
+      "topic": "Transformer 注意力机制",
+      "count": 26,
+      "query": "多头注意力里每个头的维度怎么算",
+      "best_own_score": 0.78,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 81
+    },
+    {
+      "role": "ai_algo",
+      "topic": "Agent 工具调用",
+      "count": 20,
+      "query": "Agent 调用工具失败怎么重试",
+      "best_own_score": 0.716,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 43
+    },
+    {
+      "role": "backend",
+      "topic": "消息队列",
+      "count": 33,
+      "query": "消息队列怎么保证不丢消息",
+      "best_own_score": 0.677,
+      "top1_is_own": true,
+      "hit_in_topk": 4,
+      "usable_after_threshold": 129
+    },
+    {
+      "role": "backend",
+      "topic": "服务拆分",
+      "count": 32,
+      "query": "微服务拆分的边界怎么定",
+      "best_own_score": 0.753,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 108
+    },
+    {
+      "role": "backend",
+      "topic": "数据库索引",
+      "count": 27,
+      "query": "索引为什么能加速查询",
+      "best_own_score": 0.699,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 126
+    },
+    {
+      "role": "backend",
+      "topic": "缓存一致性",
+      "count": 25,
+      "query": "缓存和数据库不一致怎么处理",
+      "best_own_score": 0.735,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 142
+    },
+    {
+      "role": "backend",
+      "topic": "高并发与限流",
+      "count": 25,
+      "query": "高并发下限流怎么做",
+      "best_own_score": 0.658,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 93
+    },
+    {
+      "role": "frontend",
+      "topic": "浏览器渲染机制",
+      "count": 42,
+      "query": "浏览器从输入 URL 到渲染经历了什么",
+      "best_own_score": 0.674,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 128
+    },
+    {
+      "role": "frontend",
+      "topic": "数据可视化",
+      "count": 37,
+      "query": "大数据量图表怎么优化性能",
+      "best_own_score": 0.626,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 145
+    },
+    {
+      "role": "frontend",
+      "topic": "前端性能优化",
+      "count": 33,
+      "query": "首屏加载慢怎么优化",
+      "best_own_score": 0.695,
+      "top1_is_own": true,
+      "hit_in_topk": 3,
+      "usable_after_threshold": 165
+    },
+    {
+      "role": "frontend",
+      "topic": "状态管理与数据流",
+      "count": 21,
+      "query": "复杂前端状态怎么管理",
+      "best_own_score": 0.59,
+      "top1_is_own": false,
+      "hit_in_topk": 4,
+      "usable_after_threshold": 170
+    },
+    {
+      "role": "frontend",
+      "topic": "组件设计与工程化",
+      "count": 19,
+      "query": "可复用组件怎么设计",
+      "best_own_score": 0.591,
+      "top1_is_own": true,
+      "hit_in_topk": 3,
+      "usable_after_threshold": 123
+    },
+    {
+      "role": "frontend",
+      "topic": "前端质量与监控",
+      "count": 19,
+      "query": "线上前端错误怎么监控",
+      "best_own_score": 0.632,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 159
+    },
+    {
+      "role": "frontend",
+      "topic": "前端工程化",
+      "count": 7,
+      "query": "前端构建和部署流程怎么做的",
+      "best_own_score": 0.503,
+      "top1_is_own": false,
+      "hit_in_topk": 0,
+      "usable_after_threshold": 119
+    },
+    {
+      "role": "general",
+      "topic": "项目复盘",
+      "count": 50,
+      "query": "这个项目如果重做你会怎么改",
+      "best_own_score": 0.651,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 116
+    },
+    {
+      "role": "general",
+      "topic": "工程素养",
+      "count": 39,
+      "query": "你怎么保证代码质量",
+      "best_own_score": 0.593,
+      "top1_is_own": true,
+      "hit_in_topk": 2,
+      "usable_after_threshold": 116
+    },
+    {
+      "role": "general",
+      "topic": "学习能力",
+      "count": 22,
+      "query": "最近学了什么新技术",
+      "best_own_score": 0.57,
+      "top1_is_own": true,
+      "hit_in_topk": 5,
+      "usable_after_threshold": 80
+    },
+    {
+      "role": "general",
+      "topic": "代码评审与协作",
+      "count": 2,
+      "query": "代码评审你关注什么",
+      "best_own_score": 0.549,
+      "top1_is_own": false,
+      "hit_in_topk": 0,
+      "usable_after_threshold": 117
+    },
+    {
+      "role": "general",
+      "topic": "Git 协作",
+      "count": 2,
+      "query": "团队怎么用 Git 协作，分支怎么管",
+      "best_own_score": 0.592,
+      "top1_is_own": false,
+      "hit_in_topk": 2,
+      "usable_after_threshold": 110
+    },
+    {
+      "role": "general",
+      "topic": "稳定性与可观测性",
+      "count": 1,
+      "query": "线上出问题你靠什么发现和定位",
+      "best_own_score": 0.618,
+      "top1_is_own": false,
+      "hit_in_topk": 0,
+      "usable_after_threshold": 112
+    },
+    {
+      "role": "general",
+      "topic": "测试",
+      "count": 1,
+      "query": "你的测试怎么写的，覆盖率多少",
+      "best_own_score": 0.585,
+      "top1_is_own": false,
+      "hit_in_topk": 0,
+      "usable_after_threshold": 114
+    }
+  ]
+}
