@@ -137,6 +137,260 @@ refresh 7 天在 HttpOnly Cookie（JS 读不到）。
 
 ---
 
+## 架构总览
+
+### 一张图看完整个系统
+
+![架构图：前端 Vue → 后端 FastAPI → LangGraph 编排（plan/probe/evaluate/route/report）→ 规则层（绿）+ 模型层（黄）→ 存储 PG/Redis。绿色规则层不 import 黄色模型层，这是整个设计的支点](docs/images/architecture.png)
+
+> 下面还有 Mermaid 版本（GitHub 上会渲染成可交互的图）。
+
+```mermaid
+flowchart TB
+    subgraph Client["前端 · Vue 3 + TypeScript"]
+        UI["面试页<br/>简历上传 / 对话 / 实时评分"]
+        Report["报告页<br/>五维雷达 + 逐轮记录"]
+        Speech["语音<br/>浏览器原生 ASR/TTS"]
+    end
+
+    subgraph API["后端 · FastAPI（31 个端点）"]
+        Auth["鉴权<br/>JWT 双 token"]
+        Sess["会话<br/>/sessions"]
+        Doc["文档<br/>/documents"]
+        SSE["流式<br/>/stream"]
+    end
+
+    subgraph Graph["编排 · LangGraph StateGraph"]
+        direction TB
+        Plan["plan<br/>拆简历 → 项目列表"]
+        Probe["probe<br/>出下一问"]
+        Eval["evaluate<br/>评分"]
+        Route["route<br/>推进 / 收尾判定"]
+        Rep["report<br/>生成报告"]
+    end
+
+    subgraph Rules["确定性规则层（不 import 任何模型）"]
+        SM["state_machine<br/>阶段 + 预算"]
+        PT["probe_tree<br/>五要素追问树"]
+        INV["invariants<br/>8 条运行时约束"]
+        LG["ledger<br/>追加式账本 + 哈希链"]
+        EV["evaluator<br/>五维评分"]
+        RB["rubric<br/>逻辑分（规则侧）"]
+    end
+
+    subgraph Model["模型层（可换）"]
+        LLM["LangChain<br/>OpenAI 兼容接口"]
+        Embed["bge-m3<br/>1024 维向量"]
+    end
+
+    subgraph Store["存储"]
+        PG[("PostgreSQL<br/>+ pgvector<br/>10 张表")]
+        RD[("Redis<br/>会话热态")]
+        CKPT["PostgresSaver<br/>图状态快照"]
+    end
+
+    UI -->|"HTTP / SSE"| Auth
+    UI --> Sess
+    UI --> Doc
+    UI --> SSE
+    Report --> Sess
+    Speech -.->|"可选"| API
+
+    Auth --> PG
+    Doc -->|"切片 + 向量化"| Embed
+    Embed --> PG
+    SSE --> Graph
+
+    Sess --> Graph
+    Graph --> Rules
+    Graph --> Model
+    Graph --> CKPT
+
+    Plan --> Probe
+    Probe -->|"出题：等候选人回答"| Eval
+    Eval --> Route
+    Route -->|"未到轮次上限<br/>且未收敛"| Probe
+    Route -->|"结束"| Rep
+
+    SM --> PG
+    LG --> PG
+
+    LLM -.->|"措辞"| Probe
+    LLM -.->|"五项打分"| Eval
+
+    classDef model fill:#fff4e6,stroke:#f59e0b,stroke-width:2px
+    classDef rules fill:#e8f5e9,stroke:#22c55e,stroke-width:2px
+    classDef store fill:#e3f2fd,stroke:#3b82f6,stroke-width:1px
+    class LLM,Embed model
+    class SM,PT,INV,LG,EV,RB rules
+    class PG,RD,CKPT store
+```
+
+**看图要点**：
+
+- **绿框（规则层）不 import 黄框（模型层）** —— 这是整个设计的支点。
+  规则层能在测试里稳定跑，所以"为什么问这题"可以被验证。
+- **只有两个地方调模型**：`probe`（写措辞）和 `evaluate`（打分）。
+  其余全是确定性代码。
+- **`route` 是 Agent loop 的关键**：它决定"继续问"还是"收尾"。
+
+### 每一部分用什么技术
+
+| 环节 | 技术 | 具体做什么 | 为什么用它 |
+|---|---|---|---|
+| 服务入口 | FastAPI 0.165 | 31 个 REST 端点 + SSE | OpenAPI 自动生成，异步友好 |
+| 会话编排 | LangGraph 1.2 | `StateGraph` 5 节点 | 条件分支/循环用图表达比手写 while 清楚，且能持久化 |
+| 状态持久化 | PostgresSaver | 每步存快照 | 进程被杀后能从第 N 轮续跑（实测重启续跑成功） |
+| 会话热态 | 进程内存 + Redis | 当前 runtime 对象 | 避免每轮都重建对象；多实例时换 Redis |
+| 结构化存储 | PostgreSQL 16 | 10 张表（users/sessions/turns/reports/…） | 关系 + 向量一套搞定 |
+| 向量检索 | pgvector 0.8 + HNSW | 1024 维，余弦距离 | 不用额外装 ES/Milvus |
+| 向量化 | bge-m3（1024 维）| 中文语义强，同义改写 ≈0.70 | 实测纯向量 17/18，混合检索反而降到 10/18 |
+| 模型接入 | LangChain + OpenAI 兼容 | `chat` / `chat_json` | 换模型只改 base_url + model |
+| 规则：阶段 | `state_machine.py` | 开场→深挖→技术→反问→反馈，带预算 | 阶段和轮次必须可预测 |
+| 规则：追问 | `probe_tree.py` | 五要素树，每要素最多试 2 次 | 防止绕着一个点死问 |
+| 规则：约束 | `invariants.py` | 8 条不变量（证据必须是原文子串等） | 拦住模型的编造 |
+| 规则：审计 | `ledger.py` | 追加式 + 哈希链 | 记录不可篡改，可验证 |
+| 规则：评分 | `rubric.py` | 数字/基线/边界/结构词检测 | 让分数有客观锚点，不漂移 |
+| 鉴权 | PyJWT | access 15min 内存 / refresh 7d HttpOnly | 防 XSS 偷 token + 静默续期 |
+| 前端 | Vue 3 + Element Plus | 6 个页面 | 组合式 API + 类型安全 |
+| 部署 | Docker Compose | 4 服务 | 一条命令起全栈 |
+
+### Agent Loop 怎么写（核心）
+
+**不是 `while True: 问 + 答`**，而是一张带条件边的图：
+
+```python
+# backend/app/graph/interview_graph.py（节选，已简化）
+
+from langgraph.graph import StateGraph, END
+
+g = StateGraph(InterviewState)
+
+g.add_node("plan",     node_plan)      # 拆简历，得到项目列表
+g.add_node("probe",    node_probe)     # 出下一问
+g.add_node("evaluate", node_evaluate)  # 评上一答
+g.add_node("route",    node_route)     # 决定继续 / 收尾
+g.add_node("report",   node_report)    # 生成报告
+
+# ── 入口是条件的：第一次进来先 plan，之后直接 probe ──
+#
+# 为什么不能固定从 plan 进：每轮 invoke 都跑一次 plan 会让 turn 卡在 0
+# （踩过这个坑）。用条件入口后，sessions 表里的 projects 为空才走 first。
+g.set_conditional_entry_point(
+    _entry_point,                      # 返回 "first" 或 "next"
+    {"first": "plan", "next": "probe"},
+)
+
+g.add_edge("plan", "probe")
+
+# ── 关键：probe 之后是 END，不是 evaluate ──
+#
+# 一"轮"跨越两次 HTTP 请求：
+#   请求 1（POST /sessions）：plan → probe → END，返回第一问
+#   请求 2（POST /answer）  ：evaluate → route → probe → END，返回评分+下一问
+#
+# 这样用户答题的时间不计入任何超时，也不会占着一个长连接。
+g.add_edge("probe", END)
+
+g.add_edge("evaluate", "route")
+
+# ── 循环在这里：route 决定回 probe 还是去 report ──
+g.add_conditional_edges(
+    "route",
+    _after_route,                      # 返回 "continue" 或 "finish"
+    {"continue": "probe", "finish": "report"},
+)
+
+g.add_edge("report", END)
+
+app = g.compile(checkpointer=PostgresSaver(...))
+```
+
+**判定逻辑（`_after_route` 做什么）**：
+
+```python
+def _after_route(state) -> str:
+    """返回 "continue" 或 "finish"。纯规则，不调模型。"""
+    turn      = state["turn"]            # 已答轮次
+    max_turns = state["max_turns"]       # 轮次上限
+    phase     = state["phase"]           # 当前阶段
+
+    # ① 到上限 → 收尾
+    if turn >= max_turns:
+        return "finish"
+
+    # ② 走到最后一个阶段（反馈）→ 收尾
+    if phase == "FEEDBACK":
+        return "finish"
+
+    # ③ 追问树所有要素已覆盖，且题库也问过 → 提前收尾
+    #    （不让用户干等到轮次上限）
+    if state.get("elements_done") and state.get("tech_done"):
+        return "finish"
+
+    return "continue"
+```
+
+**三种收尾条件**：轮次上限、阶段走完、要素+题库都覆盖了。
+所以一场面试可能 8 轮结束，也可能 16 轮，取决于候选人答得多实。
+
+### 评分怎么来的（双轨）
+
+```
+候选人回答
+    │
+    ├─→ 模型评分（evaluate 节点）
+    │   输入：当前问答 + 最近 6 轮历史 + 简历相关片段 + 评分锚点
+    │   输出：accuracy/depth/tradeoff/boundary/clarity 五项 + repeated/consistent
+    │
+    ├─→ 逻辑评分（rubric.py，零成本确定性）
+    │   accuracy  ← 数出了几个具体数字、有没有基线、套话密度、与简历是否矛盾
+    │   boundary  ← 数有没有"只在…时""不适用""失效"这类词
+    │   clarity   ← 数结构词（首先/因为/所以）、平均句长
+    │
+    └─→ 按维度加权融合
+        accuracy = 模型×0.4 + 规则×0.6    ← 数字在不在是客观的，规则更可靠
+        boundary = 模型×0.6 + 规则×0.4    ← "透不透"要模型判断
+        clarity  = 模型×0.3 + 规则×0.7    ← 结构词/句长可量化
+        depth     = 纯模型                ← 规则算不了
+        tradeoff  = 纯模型                ← 规则算不了
+                  │
+                  └─→ avg = 五维平均
+                        │
+                        └─→ verdict 由阈值裁决（不采信模型自己给的 verdict）
+                            real: ≥2.8 pass / ≥1.6 partial / <1.6 fail
+```
+
+**为什么双轨**：单靠模型会漂移（同答案两次可能 2.5/3.0），也会被话术骗；
+单靠规则判断不了"讲得深不深"。分工后，规则负责"别被空话骗"，
+模型负责"别把有料的话判死"。
+
+**规则有下限**（`RULE_FLOOR = 1.5`）：候选人说"数据保密，我只讲方法"时，
+规则不该给 1 分。这条保护的是"诚实但没数字"的回答。
+
+### 历史上下文怎么进评分（实测证明它真的起作用）
+
+同一句话「召回从 71% 提到 82%，代价是索引体积增加 30%，P99 延迟 1.8 秒」：
+
+| 历史 | repeated | accuracy | depth | **avg** |
+|---|---|---|---|---|
+| 上一轮**一字不差**说过 | true | 2 | 1 | **2.60** |
+| 历史**完全无关** | false | 4 | 3 | **3.60** |
+
+**同一个答案因上下文不同差了 1.0 分。**
+
+机制是"双保险"：
+
+1. **提示词**要求模型判断 `repeated` / `consistent`，并给了指代消解规则
+   （"前面那个方案"要从历史里找出具体指代）
+2. **规则侧**也算一遍 3-gram Jaccard 相似度（阈值 0.5），
+   任一判重就扣 `accuracy`/`depth` 各 1 分
+
+为什么要规则兜底：弱模型会忽略历史（提示词约束不住）。
+实测过一次：规则侧能准确认出"一字不差"，而模型侧直接给了 `repeated=false`。
+
+---
+
 ## 技术栈
 
 | 层 | 选型 | 为什么 |

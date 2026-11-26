@@ -618,6 +618,22 @@ def _progress(state: dict) -> dict:
 
 
 def _eval_view(ev: dict) -> dict:
+    """把内部 eval dict 转成前端视图。
+
+    ## 为什么把五维**同时**放两处（`dims` 和顶层字段）
+
+    - `dims`：前端雷达图按对象遍历，这个结构最方便
+    - 顶层字段：方便直接读 `eval.accuracy`，也便于 CLI/脚本/日志
+
+    之前只有 `dims`，导致外部调用方写 `ev.accuracy`
+    拿到 undefined（前端和验证脚本都踩过）。
+    冗余几个字段的成本远低于"字段找不到"的调试成本。
+
+    另外把双轨评分的元信息也带出去：
+    - `score_source`：每维来自模型还是规则（报告里要展示）
+    - `rule_signals`：规则侧看到的信号（数字个数、边界词等）
+    - `repeated` / `consistent`：上下文判断结果
+    """
     if not ev:
         return {}
     dims = {k: float(ev.get(k, 0)) for k in
@@ -625,7 +641,8 @@ def _eval_view(ev: dict) -> dict:
     avg = ev.get("avg")
     if avg is None and dims:
         avg = sum(dims.values()) / len(dims)
-    return {
+
+    view = {
         "verdict": str(ev.get("verdict", "")),
         "avg": round(float(avg or 0), 2),
         "weakest": str(ev.get("weakest", "")),
@@ -635,7 +652,17 @@ def _eval_view(ev: dict) -> dict:
         "verdict_conflict": bool(ev.get("verdict_conflict", False)),
         "degraded": bool(ev.get("degraded", False)),
         "covered": list(ev.get("covered") or []),
+        # 上下文信号
+        "repeated": bool(ev.get("repeated", False)),
+        "consistent": bool(ev.get("consistent", True)),
+        # 双轨评分元信息
+        "score_source": dict(ev.get("score_source") or {}),
+        "rule_signals": dict(ev.get("rule_signals") or {}),
     }
+
+    # 五维展开到顶层（方便 ev.accuracy 这种直接读法）
+    view.update(dims)
+    return view
 
 
 def _model_name() -> str:

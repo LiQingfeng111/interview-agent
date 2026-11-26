@@ -103,6 +103,15 @@ class Evaluation:
     # 事实核对：ok / error / unverifiable（没有联网资料时一律 unverifiable）
     fact_status: str = ""
     fact_detail: str = ""
+    # ---- 上下文感知（2026-11 新增）----
+    #
+    # 这两项让评分能利用"之前说过什么"和"简历里怎么写的"。
+    # 之前没有它们，模型只看当前一问一答，于是：
+    #   · 重复讲同一件事也能得高分
+    #   · 数字与简历矛盾发现不了
+    #   · "前面那个方案"被当成模糊表述扣分
+    repeated: bool = False
+    consistent: bool = True
 
     @property
     def avg(self) -> float:

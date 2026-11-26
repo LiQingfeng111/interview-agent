@@ -183,6 +183,51 @@ class SessionRuntime:
             return f"（降级）请继续讲讲{getattr(sm.probe, 'current', '这个项目')}的细节。"
 
     # ------------------------------------------------------------ 评分
+    def _resume_context(self, query: str, k: int = 3) -> str:
+        """取与当前问题相关的简历片段，供评分核对一致性。
+
+        ## 为什么评分也需要简历
+
+        出题用简历（问"你简历里写的 71%→82% 是怎么测的"），
+        但评分之前**没有简历**，于是：
+          - 候选人说"78%"，模型无法判断这和简历里写的 82% 冲突
+          - 候选人把项目讲成别人的，模型看不出来
+
+        有了简历片段，评分提示词里就能加一句
+        "如果候选人说的数字/做法和简历冲突，consistent 填 false"。
+
+        ## 为什么只取 3 条
+
+        评分提示词里已经有：系统提示 + 评分锚点 + 五个要素 + 对话历史 6 轮。
+        再塞太多简历会把上下文撑爆，反而降低评分质量。
+        3 条 ≈ 600-900 token，够核对关键数字了。
+        """
+        if not query.strip():
+            return ""
+        try:
+            from app.rag import retriever
+
+            owner = getattr(self, "user", "") or ""
+
+            # 优先查当前候选人的简历；没有 owner 时退化为全库（单机场景）
+            hits = retriever.search_resume(query, owner=owner, k=k)
+            if not hits and owner:
+                hits = retriever.search_resume(query, owner="", k=k)
+            if not hits:
+                return ""
+
+            parts: list[str] = []
+            for h in hits:
+                # parent_text 是切片时保留的完整段落，上下文更完整
+                txt = (getattr(h, "parent_text", "") or h.text or "").strip()
+                if txt:
+                    parts.append(txt[:500])
+            return "\n---\n".join(parts)
+        except Exception as e:  # noqa: BLE001
+            log.debug("取简历片段失败：%s", e)
+            return ""
+
+    # ------------------------------------------------------------ 评分
     def evaluate_answer(self, question: str, answer: str, element: str = "") -> dict:
         """评一题。只评分，不推进状态机。
 
@@ -196,6 +241,31 @@ class SessionRuntime:
         if evaluator is None:
             return {"verdict": "partial", "avg": 2.5, "evidence": "", "degraded": True}
 
+        # ---- 取对话历史（之前完全没传，是"评分只看当前一句"的根因）----
+        #
+        # 来源：状态机的 history（每轮 record() 会追加 {q, a, verdict}）
+        # 只取最近 6 轮，控制 token（一轮约 300 token，6 轮约 1.8k）
+        history: list[dict] = []
+        try:
+            raw_hist = getattr(sm, "history", None) or []
+            for h in raw_hist[-6:]:
+                if not isinstance(h, dict):
+                    continue
+                history.append({
+                    "q": h.get("q") or h.get("question") or "",
+                    "a": h.get("a") or h.get("answer") or "",
+                    "verdict": h.get("verdict") or "",
+                })
+        except Exception as e:  # noqa: BLE001
+            log.warning("读取对话历史失败（评分将缺少上下文）：%s", e)
+
+        # ---- 取简历片段（之前没传，模型无法核对答案与简历是否一致）----
+        resume_context = ""
+        try:
+            resume_context = self._resume_context(question)
+        except Exception as e:  # noqa: BLE001
+            log.warning("取简历片段失败（评分将无法核对一致性）：%s", e)
+
         try:
             ev = evaluator.evaluate(
                 question,
@@ -205,6 +275,8 @@ class SessionRuntime:
                 project=str(getattr(getattr(sm, "probe", None), "current", "") or ""),
                 target_element=element or self._last_target,
                 expected_points=self._expected_points(),
+                history=history,
+                resume_context=resume_context,
             )
         except Exception as e:  # noqa: BLE001
             log.exception("评分异常，降级")
@@ -234,6 +306,22 @@ class SessionRuntime:
         d = ev.to_dict() if hasattr(ev, "to_dict") else (
             ev if isinstance(ev, dict) else {})
 
+        # ---- 双轨评分：模型分 + 规则分 ----
+        #
+        # 为什么在模型评分之后再合一次：
+        # 模型分只反映"读起来像不像好回答"，规则分反映"有没有硬证据"（数字、
+        # 基线、边界、结构）。两个信号融合后的 avg 才既不会漂移，
+        # 又不会把有料但朴素的话判死。
+        #
+        # 合并策略见 app/core/rubric.py 的注释（每维权重不同）。
+        try:
+            from app.core import rubric
+
+            d = rubric.apply(d, answer, resume_context=resume_context)
+        except Exception as e:  # noqa: BLE001
+            # 规则分失败不影响主流程：模型分本身可用
+            log.warning("双轨评分失败（保留模型分）：%s", e)
+
         # 补上 avg —— 这里踩过一个隐蔽的坑：
         #
         # 旧 `Evaluation.avg` 是 `@property`，而 `to_dict()` 用的是
@@ -244,7 +332,10 @@ class SessionRuntime:
         # 报告里"均分 0.0"、成本统计对不上、前端雷达图全空。
         # 这个 bug 只有跑真实模型看数据库才发现的，mock 模式下
         # 因为 evaluator 返回 dict 带 avg 所以掩盖了。
-        if "avg" not in d or not d.get("avg"):
+        #
+        # 注意执行顺序：上面 rubric.apply() 已经按合并后的维度重算过 avg，
+        # 所以这里只在**没有 avg** 时才补（不要覆盖双轨结果）。
+        if not d.get("avg"):
             dims = [d.get(k) for k in
                     ("accuracy", "depth", "tradeoff", "boundary", "clarity")
                     if isinstance(d.get(k), (int, float))]

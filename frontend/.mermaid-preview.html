@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 24px; background: #fff;
+         font-family: -apple-system, 'Segoe UI', sans-serif; }
+  .mermaid { margin: 0 auto; text-align: center; }
+  .mermaid svg { max-width: 100%; height: auto; }
+  .err { color: #c00; font-size: 13px; white-space: pre-wrap; text-align: left; }
+</style>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    // 关键：不要 useMaxWidth: false。
+    // 那个设置会让 SVG 用 intrinsic 尺寸（很宽），
+    // 在固定 viewport 里会被裁掉右边 —— 实测第一版就是这么塌的。
+    // 用 true 让它自适应容器宽度。
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    securityLevel: 'loose',
+  });
+  window.__mermaid = mermaid;
+  window.__ready = true;
+</script>
+</head><body>
+<div class="mermaid" id="d0">flowchart TB
+    subgraph Client["前端 · Vue 3 + TypeScript"]
+        UI["面试页&lt;br/>简历上传 / 对话 / 实时评分"]
+        Report["报告页&lt;br/>五维雷达 + 逐轮记录"]
+        Speech["语音&lt;br/>浏览器原生 ASR/TTS"]
+    end
+
+    subgraph API["后端 · FastAPI（31 个端点）"]
+        Auth["鉴权&lt;br/>JWT 双 token"]
+        Sess["会话&lt;br/>/sessions"]
+        Doc["文档&lt;br/>/documents"]
+        SSE["流式&lt;br/>/stream"]
+    end
+
+    subgraph Graph["编排 · LangGraph StateGraph"]
+        direction TB
+        Plan["plan&lt;br/>拆简历 → 项目列表"]
+        Probe["probe&lt;br/>出下一问"]
+        Eval["evaluate&lt;br/>评分"]
+        Route["route&lt;br/>推进 / 收尾判定"]
+        Rep["report&lt;br/>生成报告"]
+    end
+
+    subgraph Rules["确定性规则层（不 import 任何模型）"]
+        SM["state_machine&lt;br/>阶段 + 预算"]
+        PT["probe_tree&lt;br/>五要素追问树"]
+        INV["invariants&lt;br/>8 条运行时约束"]
+        LG["ledger&lt;br/>追加式账本 + 哈希链"]
+        EV["evaluator&lt;br/>五维评分"]
+        RB["rubric&lt;br/>逻辑分（规则侧）"]
+    end
+
+    subgraph Model["模型层（可换）"]
+        LLM["LangChain&lt;br/>OpenAI 兼容接口"]
+        Embed["bge-m3&lt;br/>1024 维向量"]
+    end
+
+    subgraph Store["存储"]
+        PG[("PostgreSQL&lt;br/>+ pgvector&lt;br/>10 张表")]
+        RD[("Redis&lt;br/>会话热态")]
+        CKPT["PostgresSaver&lt;br/>图状态快照"]
+    end
+
+    UI -->|"HTTP / SSE"| Auth
+    UI --> Sess
+    UI --> Doc
+    UI --> SSE
+    Report --> Sess
+    Speech -.->|"可选"| API
+
+    Auth --> PG
+    Doc -->|"切片 + 向量化"| Embed
+    Embed --> PG
+    SSE --> Graph
+
+    Sess --> Graph
+    Graph --> Rules
+    Graph --> Model
+    Graph --> CKPT
+
+    Plan --> Probe
+    Probe -->|"出题：等候选人回答"| Eval
+    Eval --> Route
+    Route -->|"未到轮次上限&lt;br/>且未收敛"| Probe
+    Route -->|"结束"| Rep
+
+    SM --> PG
+    LG --> PG
+
+    LLM -.->|"措辞"| Probe
+    LLM -.->|"五项打分"| Eval
+
+    classDef model fill:#fff4e6,stroke:#f59e0b,stroke-width:2px
+    classDef rules fill:#e8f5e9,stroke:#22c55e,stroke-width:2px
+    classDef store fill:#e3f2fd,stroke:#3b82f6,stroke-width:1px
+    class LLM,Embed model
+    class SM,PT,INV,LG,EV,RB rules
+    class PG,RD,CKPT store</div>
+</body></html>
