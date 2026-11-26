@@ -1,0 +1,129 @@
+name: CI
+
+# 为什么只有 workflow 名字、没有 badge：
+# 这个仓库还没推到 GitHub，跑通本地 CI 逻辑后再上线。
+# 推到远端后，README 顶部加：
+#   ![CI](https://github.com/<user>/<repo>/actions/workflows/ci.yml/badge.svg)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ==========================================================================
+  # 规则层：核心逻辑测试
+  #
+  # 注意：这里原本写的是"零依赖，只装 pytest"。实测后发现不对——
+  # 测试文件会 import `documents`（用 python-docx 解析简历）、
+  # `llm_langchain`（用 langchain_openai）等模块。
+  # 所以必须装完整依赖，否则这个 job 直接红，CI 就成了摆设。
+  #
+  # 但**不需要** PostgreSQL / Ollama：这些测试不碰数据库和向量服务。
+  # ==========================================================================
+  core:
+    name: 规则层（无需数据库）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 安装依赖
+        run: pip install -r backend/requirements.txt pytest
+
+      - name: 跑规则层测试
+        # 只跑根目录 tests/，不碰 backend/（那边需要 PG）
+        run: pytest tests/ -q --tb=short
+
+  # ==========================================================================
+  # 后端：需要 PostgreSQL + pgvector
+  # ==========================================================================
+  backend:
+    name: 后端（需要 PostgreSQL）
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ia
+          POSTGRES_PASSWORD: ia_dev_pwd
+          POSTGRES_DB: interview_agent
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ia -d interview_agent"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+
+    env:
+      DATABASE_URL: postgresql://ia:ia_dev_pwd@127.0.0.1:5432/interview_agent
+      IA_JWT_SECRET: ci-secret-for-github-actions-32bytes
+      # 不连 Ollama：检索测试会自动跳过（有 skipif 守卫）
+      OLLAMA_BASE_URL: http://127.0.0.1:1
+      IA_REDIS: "0"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 安装后端依赖
+        run: pip install -r backend/requirements.txt pytest
+
+      - name: 建表 + 启动自检
+        # 用脚本而不是 python -c：内联要处理 YAML/shell/Python 三层转义，
+        # 容易写错且报错难读。这个脚本本地也能跑，行为和 CI 一致。
+        run: python backend/tests/manual/ci_preflight.py
+
+      - name: 跑后端测试
+        run: pytest backend/tests/ -q --tb=short
+
+  # ==========================================================================
+  # 前端：类型检查 + 单元测试 + 构建
+  # ==========================================================================
+  frontend:
+    name: 前端（TypeScript + 构建）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 类型检查
+        run: npx vue-tsc --noEmit
+
+      - name: 单元测试
+        run: npm run test
+
+      - name: 构建
+        run: npm run build
+
+  # ==========================================================================
+  # 汇总：所有 job 都过了才算绿
+  # ==========================================================================
+  all-green:
+    name: 全部通过
+    needs: [core, backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "规则层 + 后端 + 前端 全绿"

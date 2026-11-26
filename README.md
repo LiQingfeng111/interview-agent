@@ -49,6 +49,10 @@
 | 前端 | Vue 3 + TypeScript + Element Plus | 组合式 API，类型安全 |
 | 部署 | Docker Compose | 一条命令起全栈 |
 
+**核心逻辑与模型解耦**：`state_machine.py` / `probe_tree.py` / `invariants.py` /
+`ledger.py` / `evaluator.py` 都是纯 Python，不 import 任何模型客户端。
+这样规则层能在测试里稳定跑，也是"为什么问这题"能被解释的前提。
+
 ---
 
 ## 快速开始
@@ -214,15 +218,24 @@ interview_agent/
 ## 测试
 
 ```bash
-pytest                    # 434 passed（规则层 379 + 后端 55）
+pytest                    # 411 passed, 1 skipped
 cd frontend && npm test   # 18 passed
 ```
+
+| 层 | 条数 | 需要什么 |
+|---|---|---|
+| 规则层 `tests/` | 343 | 只需 Python（不连数据库/模型） |
+| 后端 `backend/tests/` | 68 | PostgreSQL；检索测试需要 Ollama |
+| 前端 `frontend/src/**/*.test.ts` | 18 | Node |
 
 覆盖的重点：
 
 - **规则层不依赖模型**：状态机、追问树、不变量、账本校验都是纯函数，好测
+- **鉴权**：篡改 token / 换密钥签 / 过期 / access-refresh 混用 —— 全部必须被拒
 - **阈值回归**：检索阈值有一组固定的查询/期望，改动会立刻发现
 - **重启恢复**：`test_restart_recovery.sh` 真的杀进程再续跑
+
+CI（`.github/workflows/ci.yml`）跑三组独立 job：规则层 / 后端（带 PostgreSQL service）/ 前端（类型检查 + 测试 + 构建）。
 
 ---
 
