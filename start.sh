@@ -177,11 +177,72 @@ cmd_api() {
   return 1
 }
 
+# ---------------------------------------------------------------- 工具
+# 探测某个端口上是否有 HTTP 服务
+#
+# ## 为什么要试多个地址（踩过的坑）
+#
+# 前端跑在 Windows 侧时，Vite 只绑 `localhost`（可能是 ::1 或 127.0.0.1）。
+# WSL 里的 `127.0.0.1` 指向 WSL 自己，**看不到 Windows 的端口**。
+#
+# 实测：Windows 侧 curl http://localhost:5173 返回 200，
+# 但 WSL 里 curl 127.0.0.1:5173 一直失败。
+# 结果 start.sh 明明服务在跑，却报"前端还没起来"。
+#
+# 所以按顺序试：本机回环 → WSL 网关（能路由到 Windows）→ ::1。
+http_alive() {
+  local port=$1
+  local gw
+  gw=$(ip route show default 2>/dev/null | awk '{print $3}')
+
+  for host in 127.0.0.1 "$gw" "[::1]"; do
+    [ -z "$host" ] && continue
+    if curl -s -o /dev/null -w "%{http_code}" --max-time 2 \
+         "http://$host:$port/" 2>/dev/null | grep -qE '^(200|30[0-9]|40[0-9])$'; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# 返回服务实际可访问的地址（给用户看的）
+#
+# ## 为什么优先显示 localhost 而不是探测到的 IP
+#
+# 探测时 WSL 走网关（172.x）才能访问 Windows 的前端，
+# 但那不代表**用户**该用网关地址——用户就在 Windows 上，
+# 用 http://localhost:5173 最自然，复制粘贴到浏览器就能开。
+#
+# 所以：探测用多个地址兜底，展示时优先用 localhost。
+# 只有当 5173 确实绑在别的地址（比如纯 Docker 场景）才显示实际 IP。
+reachable_url() {
+  local port=$1
+  local gw
+  gw=$(ip route show default 2>/dev/null | awk '{print $3}')
+
+  # 本机回环能通 → 用户也用 localhost
+  if curl -s -o /dev/null -w "%{http_code}" --max-time 2 \
+       "http://127.0.0.1:$port/" 2>/dev/null | grep -qE '^(200|30[0-9]|40[0-9])$'; then
+    echo "http://localhost:$port"
+    return 0
+  fi
+
+  # 回环不通（典型：WSL 访问 Windows 上的服务）→ 提示用户用 localhost，
+  # 因为用户通常在 Windows 侧打开浏览器
+  if [ -n "$gw" ] && curl -s -o /dev/null -w "%{http_code}" --max-time 2 \
+       "http://$gw:$port/" 2>/dev/null | grep -qE '^(200|30[0-9]|40[0-9])$'; then
+    echo "http://localhost:$port"
+    return 0
+  fi
+
+  echo "http://localhost:$port"
+}
+
 # ---------------------------------------------------------------- 前端
 cmd_web() {
   head2 "前端"
-  if curl -s -o /dev/null -w "%{http_code}" --max-time 3 http://127.0.0.1:5173/ 2>/dev/null | grep -q 200; then
-    ok "已在运行 → http://localhost:5173"
+  if http_alive 5173; then
+    ok "已在运行 → $(reachable_url 5173)"
     return 0
   fi
 
@@ -190,10 +251,72 @@ cmd_web() {
     return 1
   fi
 
-  # 前端必须在 Windows 侧跑（node_modules 是 Windows 装的，WSL 里跑不了 vite）
-  warn "前端需要在 Windows 侧启动"
-  dim "  cd frontend && npm run dev"
-  dim "  或双击 start.bat（它会开新窗口跑前端）"
+  # 检测能不能直接跑 vite
+  #
+  # ## 为什么要判断而不是直接 `npm run dev`
+  #
+  # 项目经常在 WSL 里跑，但 frontend/node_modules 是**在 Windows 侧**
+  # 用 npm install 装的（Windows 版二进制、.cmd shim）。
+  # 在 WSL 里执行会报：
+  #     sh: 1: vite: not found
+  # 或者更迷惑的 `Exec format error`。
+  #
+  # 所以先探测：能跑就跑，不能跑就明确告诉用户在 Windows 侧启动，
+  # 而不是抛个看不懂的错。
+  if command -v npm >/dev/null 2>&1 && \
+     [ -x "$PROJ/frontend/node_modules/.bin/vite" ] && \
+     "$PROJ/frontend/node_modules/.bin/vite" --version >/dev/null 2>&1; then
+    dim "启动 Vite dev server…"
+    ( cd "$PROJ/frontend" && \
+      setsid nohup npm run dev >/tmp/ia-vite.log 2>&1 < /dev/null & )
+    echo $! > "$FRONTEND_PID"
+
+    for i in $(seq 1 25); do
+      if curl -s -o /dev/null -w "%{http_code}" --max-time 2 \
+           http://127.0.0.1:5173/ 2>/dev/null | grep -q 200; then
+        ok "就绪（${i}s）→ http://localhost:5173"
+        return 0
+      fi
+      sleep 1
+    done
+    warn "启动超时，日志："
+    tail -12 /tmp/ia-vite.log 2>/dev/null | sed 's/^/    /'
+    return 1
+  fi
+
+  # 兜底：无法在当前环境跑，给出准确的诊断和两条可执行的路
+  #
+  # ## 这里必须给出「真实原因」
+  #
+  # 第一版写的是"node_modules 可能是 Windows 侧装的"，含糊。
+  # 实测 WSL 里的报错是：
+  #     ./node_modules/.bin/vite: 15: exec: node: not found
+  # 也就是 **WSL 没装 Node**（Node 只装在 Windows 侧）。
+  # 这种"环境缺东西"和"依赖装错位置"是两个完全不同的问题，
+  # 含糊其辞会让用户白折腾。
+  if ! command -v node >/dev/null 2>&1; then
+    warn "当前环境没有 Node（前端只能跑在有 Node 的那一侧）"
+    dim "  当前 PATH 里找不到 node 命令"
+    node_hint="$(command -v node 2>/dev/null || echo '')"
+    [ -z "$node_hint" ] && dim "  这通常是 WSL 没装 Node，而 Node 装在 Windows 侧"
+  else
+    warn "node 存在但 vite 跑不起来"
+    dim "  可能是 node_modules 与当前平台不匹配（例如 Windows 侧装的包拿到 Linux 用）"
+  fi
+
+  dim ""
+  dim "  三条可执行的路（任选一条）："
+  dim ""
+  dim "  A) 在 Windows 侧启动前端（最简单，推荐）"
+  dim "       cd frontend"
+  dim "       npm run dev"
+  dim "     然后打开 http://localhost:5173"
+  dim ""
+  dim "  B) 双击 start.bat（会自动做 A，并打开浏览器）"
+  dim ""
+  dim "  C) 用 Docker（不依赖本机 Node）"
+  dim "       docker compose up -d"
+  dim "     然后打开 http://localhost:8081"
   return 0
 }
 
@@ -213,7 +336,7 @@ cmd_status() {
   echo -n "  后端  8080  : "
   curl -s -o /dev/null -w "%{http_code}\n" --max-time 3 http://127.0.0.1:8080/api/health 2>/dev/null || echo "down"
   echo -n "  前端  5173  : "
-  curl -s -o /dev/null -w "%{http_code}\n" --max-time 3 http://127.0.0.1:5173/ 2>/dev/null || echo "down"
+  if http_alive 5173; then echo "ok"; else echo "down"; fi
 
   if docker exec ia-pg pg_isready -U ia -d interview_agent >/dev/null 2>&1; then
     echo ""
@@ -235,14 +358,37 @@ cmd_all() {
   cmd_api || exit 1
   cmd_web
 
+  # 结尾横幅：明确告诉用户"打开哪个地址"
+  #
+  # 这一块之前太弱：只列了地址，没说"点哪个"。
+  # 新人看到两个 URL 会犹豫。所以把主要入口单独高亮。
+  local web_up=0
+  if http_alive 5173; then
+    web_up=1
+  fi
+
   echo ""
-  echo "${C_OK}────────────────────────────────────────${C_END}"
-  echo "  后端 API   http://localhost:8080/docs"
-  echo "  前端界面   http://localhost:5173"
+  echo "${C_OK}════════════════════════════════════════════${C_END}"
+  if [ "$web_up" -eq 1 ]; then
+    echo "  ${C_OK}→ 打开这个地址开始用：${C_END}"
+    echo ""
+    echo "     ${C_HL}$(reachable_url 5173)${C_END}"
+  else
+    echo "  ${C_WARN}前端还没起来。${C_END}先在这个地址启动它："
+    echo ""
+    echo "     cd frontend && npm run dev"
+    echo ""
+    echo "     起来后打开 ${C_HL}http://localhost:5173${C_END}"
+  fi
   echo ""
-  echo "  停止       bash start.sh stop"
-  echo "  看状态     bash start.sh status"
-  echo "${C_OK}────────────────────────────────────────${C_END}"
+  echo "  ${C_DIM}后端 API 文档  http://localhost:8080/docs${C_END}"
+  echo "  ${C_DIM}健康检查       http://localhost:8080/api/health${C_END}"
+  echo "  ${C_DIM}Docker 模式    前端 :8081 / 后端 :8080${C_END}"
+  echo ""
+  echo "  停止    bash start.sh stop"
+  echo "  状态    bash start.sh status"
+  echo "  体检    bash start.sh check"
+  echo "${C_OK}════════════════════════════════════════════${C_END}"
 }
 
 # ---------------------------------------------------------------- 入口

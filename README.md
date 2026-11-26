@@ -9,6 +9,9 @@
 
 不是"跟 AI 聊天的面试机器人"。核心区别在于：**出题节奏由代码决定，模型只负责措辞。**
 
+**跑起来后打开** → http://localhost:5173 （本机开发） / http://localhost:8081 （Docker）
+详见 [快速开始](#快速开始)。
+
 ---
 
 ## 界面一览
@@ -158,7 +161,7 @@ refresh 7 天在 HttpOnly Cookie（JS 读不到）。
 
 - Docker（跑 PostgreSQL + Redis）
 - Python 3.12
-- Node.js 18+
+- Node.js **22+**（`undici` / `vitest` 的要求；Node 20 会崩）
 - （可选）[Ollama](https://ollama.com/) 跑本地向量模型 `bge-m3`
 
 ### 三行命令
@@ -175,15 +178,58 @@ cp .env.example .env
 bash start.sh
 ```
 
-`start.sh` 会自动：起 PostgreSQL → 建表 → 导入题库（722 题）→ 起后端 → 告诉你前端怎么起。
+### 起来之后打开哪个地址 ← **看这里**
 
-**Windows 用户**：双击 `start.bat`（它会调 `start.sh` 并额外起前端）。
+启动完访问 **http://localhost:5173**（前端界面）。
+
+| 地址 | 是什么 | 什么时候用 |
+|---|---|---|
+| **http://localhost:5173** | **前端界面** | **平时用这个** |
+| http://localhost:8080/docs | 后端 API 文档（Swagger） | 想直接调接口、看有哪些端点 |
+| http://localhost:8080/api/health | 健康检查（JSON） | 排查问题：各组件是否就绪 |
+
+**端口分配**（两个模式不一样，别混）：
+
+| 模式 | 前端 | 后端 |
+|---|---|---|
+| 本机开发（`bash start.sh`） | **5173** | 8080 |
+| Docker 全栈（`docker compose up`） | **8081** | 8080 |
+
+> Docker 里前端是 8081（容器内 Nginx 的 80 映射出来），
+> 本机开发是 Vite 的 5173。两个同时跑不会冲突。
+
+**改端口**：
+
+```bash
+IA_PORT=9000 bash start.sh api          # 后端改 9000
+cd frontend && npm run dev -- --port 3000   # 前端改 3000
+```
+
+前端开发时通过 Vite proxy 转发 `/api` 到 `127.0.0.1:8080`（见 `frontend/vite.config.ts`），
+所以前端改端口不影响后端连通；但**后端改端口时要同步改 vite 的 proxy target**。
+
+### 启动过程中会发生什么
+
+`start.sh` 按顺序做这些事，每步都有输出：
+
+```
+▸ 环境体检      Python / 依赖 / Ollama / 密钥
+▸ PostgreSQL    起容器（首次会创建）→ 等就绪
+▸ 后端 API      建表 → 导入题库 722 题（约 18 秒）→ 起 uvicorn
+▸ 前端          检查依赖 → 提示在 Windows 侧启动
+```
+
+**Windows 用户**：双击 `start.bat`（会调 `start.sh` 并额外开窗口跑前端，最后自动打开浏览器）。
 
 ### 遇到问题
 
 ```bash
-bash start.sh check
+bash start.sh check     # 环境体检（不动任何东西）
+bash start.sh status    # 看服务状态和数据量
+bash start.sh stop      # 停掉后端和前端
 ```
+
+体检输出示例：
 
 ```
 ▸ 环境体检
@@ -196,8 +242,6 @@ bash start.sh check
   ✓ 前端依赖已装
   基础环境就绪，可以 bash start.sh
 ```
-
----
 
 ---
 
