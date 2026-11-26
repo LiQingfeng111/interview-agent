@@ -84,11 +84,58 @@ def test_access_token_roundtrip():
 
 
 def test_tampered_token_rejected():
-    """改一个字符必须失效 —— 这是 JWT 的命门。"""
+    """改一个字符必须失效 —— 这是 JWT 的命门。
+
+    ## 这条测试原本不可靠（CI 上第一次跑就发现了）
+
+    第一版是"改最后一个字符"：
+
+        tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+
+    本地跑了一次过，但在 GitHub CI 上失败了：
+    `AssertionError: 被篡改的 token 居然通过了`。
+
+    ### 为什么？
+
+    JWT 是 `header.payload.signature` 三段 base64url 拼接。
+    签名是 HMAC-SHA256 的 32 字节 → base64url 编码成 43 个字符，
+    最后一个字符只承载 **2 个有效位**（43×6=258 位，但只有 256 位有用）。
+    也就是说末位字符有几个取值解码出**完全相同的字节**：
+
+        ...A、...B、...C、...D   → 同样的 2 位
+        ...E、...F、...G、...H   → 同样的 2 位
+
+    改最后一个字符时，如果新旧字符落在同一组里，签名字节根本没变，
+    验签自然通过——**这不是代码 bug，是测试的判据不稳**。
+
+    ### 改法
+
+    改**签名段中间**的字符。那里每一位都参与编码，
+    改动一定会改变字节，验签必然失败。
+
+    这也说明一件事：CI 不只是"跑一遍本地测试"，
+    它能抓到本地因为随机性而侥幸通过的测试。
+    """
     token, _ = jwt_mod.create_access("alice", "user")
-    # 改最后一个字符
-    tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+
+    parts = token.split(".")
+    assert len(parts) == 3, "JWT 应该是三段"
+
+    sig = parts[2]
+    # 改签名段中间的一个字符（避开尾部填充位）
+    mid = len(sig) // 2
+    original = sig[mid]
+    # 换成另一个「字符类别」的值，确保不同
+    replacement = "A" if original != "A" else "B"
+    parts[2] = sig[:mid] + replacement + sig[mid + 1 :]
+
+    tampered = ".".join(parts)
+    assert tampered != token, "构造失败：篡改后和原 token 一样"
+
     assert jwt_mod.decode_access(tampered) is None, "被篡改的 token 居然通过了"
+
+    # 反向确认：原 token 仍然有效（排除"全都解不开"的假通过）
+    assert jwt_mod.decode_access(token) is not None, "原 token 应该仍然有效"
 
 
 def test_wrong_signature_rejected():
