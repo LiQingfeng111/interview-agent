@@ -1,0 +1,70 @@
+{
+  "rows": [
+    {
+      "group": "positive",
+      "a": "召回从71%提到82%",
+      "b": "recall 从 0.71 提升到 0.82",
+      "label": "同义不同表述",
+      "sim": 0.7007
+    },
+    {
+      "group": "positive",
+      "a": "多头注意力每个头64维",
+      "b": "multi-head attention with d_k = 64",
+      "label": "中英对照",
+      "sim": 0.7216
+    },
+    {
+      "group": "positive",
+      "a": "缓存击穿怎么处理",
+      "b": "Redis 缓存穿透的解决方案",
+      "label": "近义词",
+      "sim": 0.7243
+    },
+    {
+      "group": "positive",
+      "a": "你的 baseline 是什么",
+      "b": "改造前的指标是多少",
+      "label": "同意味道",
+      "sim": 0.4686
+    },
+    {
+      "group": "positive",
+      "a": "切块 500 字是怎么定的",
+      "b": "为什么 chunk size 选 512",
+      "label": "同义不同术语",
+      "sim": 0.6334
+    },
+    {
+      "group": "negative",
+      "a": "召回从71%提到82%",
+      "b": "Redis 缓存击穿怎么处理",
+      "label": "完全不同话题",
+      "sim": 0.3933
+    },
+    {
+      "group": "negative",
+      "a": "多头注意力的头数怎么取",
+      "b": "位置编码为什么用 sin/cos",
+      "label": "同话题不同考点",
+      "sim": 0.3783
+    },
+    {
+      "group": "negative",
+      "a": "向量数据库选型",
+      "b": "数据清洗流程",
+      "label": "字面相近语义远",
+      "sim": 0.4453
+    },
+    {
+      "group": "negative",
+      "a": "失败方案是什么",
+      "b": "项目上线时间",
+      "label": "同项目不同要素",
+      "sim": 0.4465
+    }
+  ],
+  "suggested_threshold": 0.45,
+  "pos_min": 0.4686413047670955,
+  "neg_max": 0.4465338373189995
+}

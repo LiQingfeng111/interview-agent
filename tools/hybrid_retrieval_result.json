@@ -1,0 +1,22 @@
+{
+  "corpus_size": 217,
+  "k": 3,
+  "results": {
+    "vector": {
+      "recall": 0.6,
+      "false_positive": 0.0,
+      "net": 0.6
+    },
+    "keyword": {
+      "recall": 0.2,
+      "false_positive": 0.25,
+      "net": -0.04999999999999999
+    },
+    "rrf": {
+      "recall": 0.2,
+      "false_positive": 0.0,
+      "net": 0.2
+    }
+  },
+  "rrf_k": 60
+}

@@ -1,0 +1,27 @@
+{
+  "stats": {
+    "A": {
+      "vector": 6,
+      "keyword": 6,
+      "rrf": 6,
+      "adaptive": 6,
+      "total": 6
+    },
+    "B": {
+      "vector": 5,
+      "keyword": 1,
+      "rrf": 3,
+      "adaptive": 5,
+      "total": 6
+    },
+    "C": {
+      "vector": 6,
+      "keyword": 0,
+      "rrf": 1,
+      "adaptive": 6,
+      "total": 6
+    }
+  },
+  "cases": 18,
+  "k": 3
+}

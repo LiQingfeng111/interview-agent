@@ -1,0 +1,117 @@
+# 完整栈：一条命令起 PostgreSQL + Redis + 后端 + 前端
+#
+# 用法：
+#   docker compose up -d --build   # 首次（会构建镜像）
+#   docker compose ps              # 看状态
+#   docker compose logs -f backend # 跟日志
+#   docker compose down            # 停（数据卷保留）
+#
+# Ollama 不进 compose 的原因（实测过）：
+#   本机 RTX 4050，Ollama 跑在显存里（size_vram = 模型总量 689MB），
+#   单条向量化 0.277 秒。进 compose 后因为 Docker 没配 nvidia runtime
+#   会退化到 CPU，慢 3-5 倍。所以留在宿主机，容器通过 host.docker.internal 访问。
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ia-pg
+    environment:
+      POSTGRES_USER: ia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ia_dev_pwd}
+      POSTGRES_DB: interview_agent
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ia -d interview_agent"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: ia-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ia-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # 数据库 / 缓存
+      DATABASE_URL: postgresql://ia:${POSTGRES_PASSWORD:-ia_dev_pwd}@postgres:5432/interview_agent
+      REDIS_URL: redis://redis:6379/0
+      # ---------------------------------------------------------------- 宿主机服务地址
+      #
+      # 这里踩过一个坑，值得记下来：
+      #
+      # `host.docker.internal` 在 **Docker Desktop for Windows** 上可用，
+      # 但在 **WSL2 里的 Docker Engine + 后端跑在 Windows 宿主机** 这个组合下
+      # **不通**（实测 curl 返回 000）。
+      #
+      # 实测可用的地址是 WSL 的默认网关 IP（本例 172.22.48.1），
+      # 因为 Ollama 和模型网关都监听在 Windows 的 0.0.0.0 上，
+      # 而 WSL2 的网关正好能路由到 Windows。
+      #
+      # 所以默认值用 HOST_GATEWAY 变量，由 `bash ops.sh up-full` 自动探测写入 .env。
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11800}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:18326/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-lobsterai/deepseek-flash}
+      # 鉴权：生产必须显式设置
+      IA_JWT_SECRET: ${IA_JWT_SECRET:-dev-secret-please-change-in-production}
+      # 允许前端跨域
+      IA_CORS_ORIGINS: "http://localhost:5173,http://localhost:8081,http://127.0.0.1:8080"
+      IA_HOST: 0.0.0.0
+      IA_PORT: 8080
+      IA_LEGACY_ROOT: /app
+    volumes:
+      # 持久化：上传的简历、SQLite 残留、日志
+      - ./data:/app/data
+      - ./logs:/app/logs
+    extra_hosts:
+      # 关键：让容器能解析宿主机名（访问 Ollama / 模型网关）
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ia-frontend
+    ports:
+      - "8081:80"
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
