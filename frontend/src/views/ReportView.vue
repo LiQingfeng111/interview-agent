@@ -11,6 +11,7 @@ import { useRoute, useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import { sessionApi } from '@/api'
 import { useSessionStore } from '@/stores/session'
+import { renderMarkdown } from '@/utils/markdown'
 
 const route = useRoute()
 const router = useRouter()
@@ -114,6 +115,18 @@ function backToInterview() {
 function goHistory() {
   router.push({ name: 'history' })
 }
+
+/**
+ * 渲染后的报告 HTML。
+ *
+ * 为什么需要这一步：原来模板里写的是 `{{ markdown }}`，
+ * 那是**文本插值**，Markdown 语法（`#`、`**`）会原样显示成字符。
+ *
+ * `renderMarkdown` 内部用 marked 转换 + DOMPurify 清洗。
+ * 清洗不能省：报告是模型生成的，属于不可信输入，
+ * 直接 v-html 会把 `<img onerror=...>` 之类的注入执行掉。
+ */
+const renderedReport = computed(() => renderMarkdown(markdown.value))
 </script>
 
 <template>
@@ -167,7 +180,7 @@ function goHistory() {
         <!-- Markdown 报告 -->
         <div class="ia-panel ia-grow">
           <h3 style="margin: 0 0 12px">详细报告</h3>
-          <div class="ia-markdown">{{ markdown }}</div>
+          <div class="ia-markdown" v-html="renderedReport" />
         </div>
       </div>
     </template>

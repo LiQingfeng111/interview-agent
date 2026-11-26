@@ -1,0 +1,15 @@
+{
+  "base": "http://localhost:5173",
+  "demoUser": "demo_mwxph9ne",
+  "shots": [
+    "01-login",
+    "03-upload-progress",
+    "02-interview-setup",
+    "04-interview-chat",
+    "05-report",
+    "06-bank",
+    "07-history",
+    "08-mobile-login"
+  ],
+  "at": "2026-11-26T15:27:51.577Z"
+}

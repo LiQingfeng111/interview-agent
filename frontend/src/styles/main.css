@@ -31,10 +31,21 @@ body {
 }
 
 /* ---------------------------------------------------------------- 布局 */
+/**
+ * 页面容器。
+ *
+ * `min-height` 里减掉的是顶栏高度（56px）+ 上下 padding。
+ * 不加的话内容少的页面（比如只有一张卡片的报告页）下方会留一大片空白，
+ * 截图时特别明显。
+ *
+ * 为什么用 `calc(100vh - 96px)` 而不是 `height: 100%`：
+ * `.ia-page` 的父级是路由出口，没有确定高度，`100%` 会退化成 auto。
+ */
 .ia-page {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px 24px 60px;
+  min-height: calc(100vh - 96px);
 }
 
 .ia-panel {
@@ -116,10 +127,22 @@ body {
 @keyframes blink { 50% { opacity: 0; } }
 
 /* ---------------------------------------------------------------- 空状态 */
+/**
+ * 空态提示。
+ *
+ * 用 flex 垂直居中而不是固定 padding：
+ * 对话区在"还没开始"时内容很少，固定 padding 会让提示挤在顶部，
+ * 下面留一大片空白（截图里特别明显，像页面没加载完）。
+ */
 .ia-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: var(--ia-text-sub);
-  padding: 48px 20px;
+  min-height: 420px;
+  padding: 40px 20px;
 }
 
 .ia-empty h3 {
@@ -129,16 +152,133 @@ body {
 }
 
 /* ---------------------------------------------------------------- 代码/报告 */
+/**
+ * 报告内容容器。
+ *
+ * 注意：这里**不能**用 `white-space: pre-wrap`。
+ *
+ * 第一版是纯文本渲染（`{{ markdown }}`），所以要 pre-wrap 保留换行。
+ * 现在改成 v-html 渲染后的 HTML，pre-wrap 会让所有标签间的空白
+ * 都变成可见换行，把排版搞乱。
+ *
+ * 换行交给 Markdown 里的 <p>/<br> 处理（marked 配了 breaks: true）。
+ */
 .ia-markdown {
-  white-space: pre-wrap;
   font-size: 13.5px;
   line-height: 1.75;
+  color: var(--ia-text);
   background: #fbfcfe;
   border: 1px solid var(--ia-border);
   border-radius: 8px;
-  padding: 14px 16px;
+  padding: 14px 18px;
   max-height: 60vh;
   overflow-y: auto;
+}
+
+/* 标题：报告里用 #/## 区分层级，需要明显的间距 */
+.ia-markdown h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ia-border);
+}
+
+.ia-markdown h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 18px 0 8px;
+  color: var(--ia-primary);
+}
+
+.ia-markdown h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 14px 0 6px;
+}
+
+.ia-markdown p {
+  margin: 6px 0;
+}
+
+/* 列表：报告里大量用 "- xxx" 列举 */
+.ia-markdown ul,
+.ia-markdown ol {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+
+.ia-markdown li {
+  margin: 3px 0;
+}
+
+.ia-markdown strong {
+  font-weight: 600;
+  color: var(--ia-text);
+}
+
+/* 行内代码与代码块 */
+.ia-markdown code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12.5px;
+  background: #eef2f7;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.ia-markdown pre {
+  background: #1f2937;
+  color: #e5e7eb;
+  padding: 12px 14px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.ia-markdown pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* 引用块：报告里"（说明：…）"这类补充说明 */
+.ia-markdown blockquote {
+  margin: 10px 0;
+  padding: 8px 14px;
+  border-left: 3px solid var(--ia-primary);
+  background: #f4f8fd;
+  color: var(--ia-text-sub);
+}
+
+.ia-markdown hr {
+  border: none;
+  border-top: 1px solid var(--ia-border);
+  margin: 16px 0;
+}
+
+/* 表格（报告里可能有维度对照） */
+.ia-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.ia-markdown th,
+.ia-markdown td {
+  border: 1px solid var(--ia-border);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.ia-markdown th {
+  background: #f2f5f9;
+  font-weight: 600;
+}
+
+.ia-markdown a {
+  color: var(--ia-primary);
+  text-decoration: underline;
 }
 
 /* ---------------------------------------------------------------- 工具类 */

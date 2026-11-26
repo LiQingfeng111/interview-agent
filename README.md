@@ -4,8 +4,37 @@
 
 不是"跟 AI 聊天的面试机器人"。核心区别在于：**出题节奏由代码决定，模型只负责措辞。**
 
-<!-- 界面截图 -->
-<!-- ![面试界面](docs/images/interview.png) -->
+![面试配置页：左侧表单 + 右侧对话区，简历显示「已就绪 · 3 个片段完成向量化」](docs/images/02-interview-setup.png)
+
+<table>
+<tr>
+<td width="50%">
+
+**简历上传有六阶段反馈**
+
+上传 → 已收到 → 解析中 → 向量化 3/8 → 就绪
+
+用户永远知道现在在干什么，不会以为卡住而反复点。
+
+![上传进度：绿色进度条 + 已就绪标签 + 粘贴框锁定](docs/images/03-upload-progress.png)
+
+</td>
+<td width="50%">
+
+**报告：五维雷达 + 逐轮记录 + 成本**
+
+雷达图数据来自 `turns` 表的独立列（不是 JSON），
+所以能按维度聚合。
+
+![报告页：五维雷达图 + 分维度条形 + Markdown 报告 + token 成本](docs/images/05-report.png)
+
+</td>
+</tr>
+</table>
+
+**对话页**（每轮实时给分 + 评估模式点评卡）：
+
+![面试对话：左侧进度与阶段，右侧问答气泡与评分徽标](docs/images/04-interview-chat.png)
 
 ---
 
@@ -113,11 +142,36 @@ bash start.sh check
 | 题库 | 722 题检索（语义搜索） |
 | 管理 | 用户管理、阈值调参、RAG 诊断 |
 
+<table>
+<tr>
+<td width="50%">
+
+**题库**：722 题，纯语义检索（不做关键词混合）
+
+![题库页：722 道题，可按话题过滤，支持语义搜索](docs/images/06-bank.png)
+
+</td>
+<td width="50%">
+
+**历史**：往期面试记录
+
+![历史页：往期面试列表](docs/images/07-history.png)
+
+</td>
+</tr>
+</table>
+
+**移动端**（响应式，未做专门适配但可用）：
+
+<img src="docs/images/08-mobile-login.png" alt="移动端登录页" width="300">
+
 **几个细节**：
 
 - **简历上传有六阶段进度反馈**：「正在上传 → 已收到 → 解析中 → 向量化 3/8 → 就绪」。用户永远知道现在在干什么。
 - **语音**：浏览器原生 ASR/TTS（Chrome/Edge 零延迟、免费、内容不外传），后端留了 Whisper/edge-tts 作为 Firefox 兜底。
 - **评估模式**：勾选后每轮回答完显示「扣分点 / 缺什么 / 建议 / 可以这样说」。
+- **报告 Markdown 渲染带 XSS 清洗**：报告是模型生成的，属于不可信输入，直接 `v-html` 会被注入。用 marked + DOMPurify，8 条测试覆盖常见 payload。
+- **截图是脚本自动生成的**：`node frontend/scripts/screenshot.mjs`，UI 改了重跑一次就更新，不会忘记同步文档。
 
 ---
 
