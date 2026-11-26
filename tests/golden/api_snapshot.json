@@ -1,0 +1,2504 @@
+{
+  "health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "sessions": 0
+    }
+  },
+  "meta": {
+    "status": 200,
+    "body": {
+      "default_resume": "# 张小明\n\nAI 专业 · 本科大三 · 求职方向：Agent 应用开发实习\n\n## 高校课程问答助手\n\n角色：独立开发\n\n技术栈：Python / FastAPI / 向量库 FAISS / RAG / LangChain\n\n- 为 300+ 份课程课件构建检索问答，支持 PDF 与 PPT 解析\n- 设计按标题与段落切分的 chunk 策略（500 字 / 重叠 80 字）\n- 加入检索重排，实测召回率 82%，人工满意度 4.2/5\n- 用 Docker 部署，平均响应 1.8s\n\n## 校园二手交易平台\n\n角色：后端负责人\n\n技术栈：FastAPI / PostgreSQL / Redis / Docker\n\n- 负责商品检索与订单状态机，处理并发下单冲突\n- 用 Redis 缓存热点商品，QPS 从 120 提升到 900\n- 写过接口压测脚本，定位到数据库连接池不足的问题\n\n## 简易 Agent 工具调用实验\n\n角色：独立开发\n\n技术栈：Python / OpenAI API / MCP\n\n- 实现工具注册与调用分发，支持 6 个本地工具\n- 加入超时与重试，失败率从 11% 降到 3%\n- 踩过工具参数幻觉的坑，用 JSON schema 校验修复\n",
+      "personas": [
+        {
+          "key": "balanced",
+          "name": "综合平衡"
+        },
+        {
+          "key": "strict",
+          "name": "严厉压力面"
+        },
+        {
+          "key": "warm",
+          "name": "温和引导"
+        },
+        {
+          "key": "academic",
+          "name": "学术深挖"
+        },
+        {
+          "key": "engineering",
+          "name": "工程实践"
+        },
+        {
+          "key": "efficient",
+          "name": "专业高效"
+        }
+      ],
+      "roles": [
+        {
+          "key": "ai_algo",
+          "name": "AI 算法岗"
+        },
+        {
+          "key": "backend",
+          "name": "后端开发岗"
+        },
+        {
+          "key": "agent_app",
+          "name": "Agent 应用岗"
+        },
+        {
+          "key": "frontend",
+          "name": "前端开发岗"
+        },
+        {
+          "key": "general",
+          "name": "通用技术岗"
+        }
+      ]
+    }
+  },
+  "bank": {
+    "status": 200,
+    "body": {
+      "items": [
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你编排多个 Agent 时，是怎么决定谁先跑、谁依赖谁的？这个执行顺序是硬编码在代码里还是由模型动态规划的？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "多 Agent 之间靠消息传递协作，你的消息格式是怎么定义的？为什么不用纯自然语言让 Agent 自由对话？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你的多 Agent 系统里，主管 Agent 把任务拆给子 Agent 时，子 Agent 的上下文是全新的还是继承主管的对话历史？为什么这么选？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "多个子 Agent 并行跑的时候，你用什么机制判断这一轮全部结束并把结果汇总给主管？讲一下具体的等待和聚合逻辑。",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你的多 Agent 系统怎么控制单次任务的总成本？说一个具体的 token 预算分配方案。",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "多 Agent 系统跑偏了，你怎么定位是哪个环节出的问题？说下你日志里到底记了哪些字段。",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "在多 Agent 并行执行里，子 Agent 超时或报错时你会先取消兄弟任务还是等它们跑完？请给出你的判定依据，并说明：deadline 如何从父任务向下传递和分配、哪些错误重试哪些不重试、失败 Agent 的中间结果怎么标记与合并、以及如何保证有副作用的工具调用不被重试重复执行。",
+          "source": "model_generated+ai_fixed",
+          "topic": "Agent"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "多个 Agent 之间传递上下文时，你是怎么控制 token 预算的？会不会出现上下文越滚越长导致后面 Agent 输入爆炸？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "两个 Agent 对同一件事给出了冲突的结论，你的编排层怎么裁决？会引入一个仲裁 Agent 还是走规则合并？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "多 Agent 系统一次任务跑下来会调用很多次模型，你怎么评估这套编排到底比单 Agent 好在哪里？有没有具体的对照指标？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "子 Agent A 的结论和子 Agent B 的结论冲突，主管 Agent 怎么裁决？你在 prompt 或代码层面做了什么保证它不会随便挑一个？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "两个子 Agent 都能调同一个写库工具，你怎么防止它们对同一条记录重复写或者互相覆盖？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你给模型暴露工具时，工具描述和参数 JSON Schema 具体怎么写，才能让它在十几个工具里选对那个？举个你改过描述之后准确率变好的例子。",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent 工具设计"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你在 Agent 项目里做端到端评估时，任务成功率是怎么算的？一个多步任务里只要中间某一步调用了错误工具但最终结果碰巧对了，这次算成功吗？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent 评估"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "线上 trace 回流构建评估集时，你怎么控制分布漂移导致的评估集失效？请说明：采样回流通道、失效触发条件、以及如何做分层覆盖度统计，避免分数虚高。",
+          "source": "model_generated+ai_fixed",
+          "topic": "Agent 评估"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "多轮 Agent 场景里，你怎么评一个需要 8 到 10 步才能完成的任务？只看最后一句回答会漏掉什么？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent 评估"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "用 LLM-as-judge 给 Agent 打分时，你怎么处理同一份输出两次评分不一致的问题？有没有量过 judge 和人工标注的一致率？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent 评估"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "工具调用这一层你怎么单独评？如果一个 Agent 成功率 70%，你能拆出来多少是选错工具、多少是参数填错、多少是工具本身返回异常？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent 评估"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "你上线前用什么方式做回归？新 prompt 或新模型版本让总体分涨了 2 分，但有个子场景掉了 15 分，你的评估流程能自动拦住这次发布吗？",
+          "source": "model_generated+ai_ok",
+          "topic": "Agent 评估"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你们团队合并分支时用 merge 还是 rebase？如果一个功能分支开发了两周、期间主干多了 80 个提交，你在合并前会怎么处理？",
+          "source": "model_generated+ai_ok",
+          "topic": "Git 协作"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "请设计一个长对话场景下的滚动摘要（rolling summary）压缩模块：说明触发条件、摘要的数据结构、以及如何保证用户在前几轮说过的关键约束（如预算上限、称呼、禁用的操作）在连续压缩 5 次后依然不丢失。要求给出可实现的机制而不是原则性描述。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "设计一个长对话的滚动摘要压缩方案：当历史接近上下文窗口时，如何确定压缩触发时机和保留窗口大小？摘要 prompt 必须包含哪些结构化字段，才不至于在后几轮出现信息丢失？",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "线上表现：多轮对话后 Agent 反复追问用户已提供过的信息，或引用了一条早已被推翻的旧结论。如何区分是压缩环节丢信息、还是检索式记忆召回了错误内容？请给出定位步骤。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "关键信息锚定：如何保证系统硬约束、用户硬性要求、工具返回的关键 ID 在多轮长上下文中不被淹没？请给出具体的消息位置编排和写入形式，并说明如何验证有效。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "一次 Agent 请求的上下文预算怎么编排？当工具返回 50KB 的网页或日志时，直接截取前 N 个字符有什么问题、应该怎么处理？",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "模型标称 128k 上下文，实际能安全用多少？为什么长上下文不能替代 RAG？请说明你会怎么分配 token 预算。",
+          "source": "web+ai_fixed",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "一个多轮 Agent 接入工具返回和 RAG 后频繁超出上下文预算、答非所问，你会怎么改？这算 Prompt 工程还是上下文工程？",
+          "source": "web+ai_fixed",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "长任务 Agent 的上下文快满时怎么办？Compaction 通过摘要和外部笔记维持连续性会带来哪些信息损失、回读成本和恢复风险？",
+          "source": "web+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "用户输入往往口语化、含指代和精确 ID（报错码/文件名）。在设计 Agent 的上下文检索时，你会如何做查询理解与改写、混合召回与重排？当多路召回结果冲突或证据不足时，如何决策并把可追溯性交给下游？",
+          "source": "web+ai_fixed",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "一次 Agent 请求里，system prompt、工具定义、历史对话、检索片段这四块你怎么分配 token 预算？超了先砍哪块，为什么？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你给一个 Agent 分配 128k 上下文窗口，system prompt、工具定义、对话历史、检索结果各自的 token 预算怎么切？这个比例你是按什么实测数据定的？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "多轮 Agent 循环里，你怎么排列 messages 才能让 prompt cache 命中？哪些看似无害的改动会让整段前缀缓存失效？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "一个客服 Agent 已连续跑 45 轮、上下文占用达到模型窗口的 90%（窗口 128k）。你必须淘汰旧消息，请给出：(1) 你在什么水位触发淘汰、给下一轮工具返回预留多少预算；(2) 哪些内容绝对不能丢；(3) 淘汰的优先级顺序，以及对工具返回值的压缩方式；(4) 淘汰后如何避免模型重复调用同一工具或忘掉已确认的关键事实（如用户 ID、订单号）。",
+          "source": "model_generated+ai_fixed",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "工具返回的 JSON 动辄几千 token，你把它塞进上下文前做了什么处理？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你现在要给上下文做分层（比如常驻层、任务层、临时层），这个分层是按什么切的，每层的生命周期多长？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你这个 Agent 的上下文窗口是怎么切预算的？system prompt、工具 schema、历史对话、检索结果各留多少 token，超了先砍谁？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你的 Agent 单次请求调用 128k 上下文的模型，实际会怎么给 system prompt、工具定义、历史对话、检索片段分预算？超了先砍哪一块？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "有个工具返回了 50KB 的 JSON，直接塞进上下文会炸，你在 Agent 里具体怎么处理这个返回值？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你给 Agent 单轮上下文定了 32k token 的预算，具体怎么在 system prompt、工具定义、历史消息、检索片段之间分配？超了先砍哪块？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "多轮对话到第几轮或多少 token 时你会触发摘要压缩？摘要里必须保留哪几类信息，哪些可以丢？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "一个 Agent 单次请求送给模型的上下文通常由哪几部分组成？当历史对话+工具返回导致总长度接近窗口上限时，你会按什么优先级裁剪？请说明裁剪顺序及理由，并指出哪些内容放在上下文里的位置会影响模型的使用效果。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "以一个每轮都会追加检索片段和工具返回的 Agent 为例：说明一次请求进入模型前，上下文中的 system 指令、历史对话、工具返回、检索片段、长期记忆分别由哪一层负责筛选/压缩/排序；并指出「开发时静态写好」和「运行时每轮决定」这两类工作各自落在哪些内容上。",
+          "source": "generated+ai_fixed",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "一个 Agent 连续跑了 60 轮对话、调用了十几次工具后开始答非所问。从上下文窗口的角度分析可能的原因，并说明为什么「把全部历史原样塞进上下文」不是可行解法。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "长对话压缩常见有哪些做法？请至少列出两种，并说明每种做法分别容易丢失哪类信息、在什么情况下会出问题。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "用户在第 2 轮说过「预算不超过 500 元」，到第 30 轮时 Agent 推荐了 2000 元的方案。请说明可以用哪些上下文工程手段让这类早期关键约束在多轮后仍然生效（至少两种）。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "某 Agent 用向量检索做长期记忆，上线后发现用户在早期明确说过的约束（例如\"不要给我打电话，只发邮件\"\"预算不超过 5000\"）在 20 轮后仍然被违反，而闲聊内容却能被正确召回。请分析至少两个根因，给出对应的工程修复方案，并说明这些修复各自带来的新代价。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "长对话压缩中，摘要式压缩会在什么条件下产生不可逆的信息损失？请设计一个反事实：如果被摘要掉的那句话恰好是后续工具调用所需的关键参数（如订单号、时间范围），你会在压缩管线里加哪一层保障，使这类损失可检测、可恢复？",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "关键信息锚定常被实现为“在 system prompt 里重复强调重点”。请分析这种做法在什么情况下会失效甚至反噬，并给出一个替代设计：如何让关键约束在多轮、多工具调用后仍然稳定生效，而不依赖于模型对重复文本的注意力。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "检索式记忆（RAG 式上下文注入）在 Agent 长任务里会引入“检索到但用错”的风险。请描述至少两种具体的误用模式，并说明你会用什么信号在运行时判定某条检索结果不该被注入，而不是只靠相似度阈值。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "在上下文预算固定（如 32k）且任务需要跨数十轮的工具调用时，压缩、锚定、检索三种手段会互相挤占预算。请给出一个预算分配策略，并说明当任务从“信息收集型”切换为“精确操作型”时，你会怎样重新分配，依据是什么。",
+          "source": "generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "多轮对话里用户前面提过的约束（比如'预算不超过 5000'），你是怎么保证第 10 轮时模型还没忘？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "你把 system prompt、历史消息、检索结果、工具结果拼成一个 prompt，它们的先后顺序怎么排，为什么？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "长任务跑到第 30 步时上下文已经很长，你怎么用摘要来压缩前面的步骤，又怎么保证摘要没把关键信息压没？",
+          "source": "model_generated+ai_ok",
+          "topic": "上下文工程"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你提了一个 800 行的 PR，同事说没法 review，你会怎么把它拆开？",
+          "source": "model_generated+ai_ok",
+          "topic": "代码评审"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你提了一个 800 行的 PR，reviewer 说太大打回，你按什么维度拆成多个能独立合入的 PR？",
+          "source": "model_generated+ai_ok",
+          "topic": "代码评审与协作"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "多个 Agent 共享同一份记忆存储（如共享向量库或共享状态对象）时，常出现并发写入覆盖和相互矛盾的事实。请给出具体的工程实现方案，说明写入协议、冲突判定和读取时的取舍规则。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "在一个包含 planner / retriever / coder / reviewer 的多 Agent 系统里，角色边界如果只写在 system prompt 里，线上经常出现两个 Agent 改同一个文件、互相覆盖结论。请给出至少三种可执行的边界约束机制，并说明每种机制具体拦截哪类错误。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "两个 Agent 并发读写同一份共享记忆（如任务状态表或事实库）时发生覆盖写，线上表现为同一个子任务被重复执行两次。请说明你会查哪些日志字段来定位是哪次读-改-写被覆盖，以及从机制上如何修复。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "多 Agent 互相 handoff 容易形成 A→B→A 的循环，或某个 Agent 反复调用同一工具。请设计一套运行时检测与熔断方案：给出你会上线的具体参数类型和量级，并说明为什么只统计 handoff 跳数不够。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "多 Agent 任务上线后 P95 延迟和 token 成本翻倍，但单次 LLM 调用耗时和单价都没变。你会怎么用 trace 数据定位问题，常见根因有哪些，分别怎么治理？",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你的 supervisor 用什么信号决定把任务交给哪个子 Agent？如果模型输出了一个不存在的 Agent 名字，代码具体怎么走？",
+          "source": "model_generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你的 supervisor 靠什么信号决定这一步是交给子 Agent、还是自己直接回答？这个信号是模型判断还是代码规则？",
+          "source": "model_generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你的多 Agent 系统里 supervisor 把任务拆给 3 个 sub-agent 后，怎么判断该并行调用还是串行调用？能举一个你实际选错的例子吗？",
+          "source": "model_generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "多个 Agent 共享一份对话历史时，你是怎么隔离上下文的？如果 A agent 的工具返回了 5000 字结果，会原样传给 B 吗？",
+          "source": "model_generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "Agent 之间互相调用时你怎么防死循环？遇到过 A 转给 B、B 又转回 A 的情况吗，最后是怎么断的？",
+          "source": "model_generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "多 Agent 协作时工具权限是怎么划分的？为什么不让每个 Agent 都能调用全部工具？",
+          "source": "model_generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "在一个包含 Planner、Executor、Reviewer 三个 Agent 的编排系统中，请说明这三个角色的职责边界应如何划分，并指出哪些信息必须在角色交接时显式传递，哪些不应由下游 Agent 重新推断。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "有个客服工单处理流程：读工单内容 → 查订单库 → 判断是否符合退款政策 → 生成回复。有人提议拆成「检索 Agent / 决策 Agent / 回复 Agent」三个。请给出你的决策：分别列出支持单 Agent 和支持多 Agent 的具体判据（至少各两条，需带可观测指标，如步骤是否有分支、共享上下文占比、上下文窗口占用、端到端延迟预算、单步失败率），并说明多 Agent 方案相比单 Agent 额外引入了哪些可量化的成本。",
+          "source": "generated+ai_fixed",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "以「修复一个线上 bug 并补测试」为例，如果拆成编码 Agent、测试 Agent、审查 Agent 三个角色，你会怎么写它们的职责边界（各自的输入、可执行动作、输出产物、什么情况必须交给别人）？请具体说明你用什么规则防止三者职责重叠。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "多个 Agent 共用一份共享记忆（或黑板）时，冲突通常从哪来？请举出至少两种具体冲突场景，并给出基础层面可落地的处理方式。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "一个 Agent 把子任务委派给另一个 Agent，对方可能又把任务委派回来。你会靠哪些具体信号判断这是死循环并终止它？终止之后系统应该返回什么？",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "多 Agent 互相调用（A 调 B、B 又调 A）时容易产生死循环或无限委派。请说明你会如何检测和终止这类循环，并分析设置最大轮数上限这一方案在什么情况下会失效、你如何取舍。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "你负责一条由研究员Agent、编码Agent、审核Agent组成的流水线。上线后发现两件事：审核Agent频繁调用代码搜索工具并自行修改代码；编码Agent反复向研究员Agent索要本可自己查到的接口文档。请给出你判断“角色边界划错了”的可观测指标，并设计一个反事实实验来验证边界应该往哪边移。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "多个Agent共享一个记忆库：研究员Agent写入“该API支持批量查询”，编码Agent基于实测写入“该API批量上限100条，超限返回429”。请设计冲突检测与解决机制，并说明在什么条件下你会放弃共享写、改成“只读共享+私有写”。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "两个Agent互相请求对方补全信息，已经往返12轮。请给出你的循环检测机制与判定阈值，并说明如何避免把“合法的长任务重试”误判为死循环。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "请给出一个判定流程：什么任务应该用单Agent加工具而不是多Agent编排；在必须多Agent时，如何在上层supervisor（监督者）与去中心化对等协作之间选择。请给出可量化判据和各自的失效条件。",
+          "source": "generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "你的规划 Agent 给出的子任务粒度太粗或太细时怎么办？有没有做过任务分解质量的评估？",
+          "source": "model_generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "多 Agent 跑完一个任务后，你怎么定位是哪一步出的问题？trace 里都记了哪些字段？",
+          "source": "model_generated+ai_ok",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你完成一次技术调研或踩坑排查后，会把它沉淀成什么形式的团队资产？请具体说明文档包含哪些字段、放在哪里、以及如何保证半年后别人照着还能跑通。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "团队准备引入一个此前没有生产使用经验的组件（例如一套新的分布式缓存或消息队列），要求你先做小流量灰度验证。请给出你的验证方案：灰度如何分层放量、采集哪些指标、判定通过/回滚的量化阈值分别怎么定，以及验证周期多长。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "线上出现一次故障，排查链路涉及一个你不熟悉的技术栈或中间件。请描述你在时间压力下建立排查路径的具体做法：先看什么、如何缩小范围、什么时候决定求助或回滚，以及事后如何补上这块知识盲区。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "团队现有方案在某个维度上已不能满足需求（例如定时任务调度出现漏跑、重复执行或扩缩容困难），你主张替换。请说明你的技术选型依据：评估维度及权重、POC 如何设计才能对比出差异、最终用什么材料说服团队。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你主导排查过一次较严重的线上问题。请说明如何把这次经验沉淀为团队可复用的资产，并给出可以验证沉淀是否真正生效的度量方式。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "讲一次你在两周内从零上手一个陌生技术栈并交付东西的经历：交付物是什么形态（脚本 / PR / 上线接口）？第一天你跑通的最小可运行路径是什么？你用什么可验证的标准判断自己「已经会用」——能独立改哪一部分、能定位哪一类问题？",
+          "source": "model_generated+ai_fixed",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你说自己两周就能上手一门新语言并提交生产代码，这两周具体是怎么切的？第一个合进主干的改动是什么？",
+          "source": "model_generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "最近一次你是靠读官方文档或源码而不是搜博客解决的问题是什么？文档里哪一节给了关键信息？",
+          "source": "model_generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你最近半年从零学的一门技术，第一份读的材料具体是什么（官方文档哪一章、哪本书哪节、还是某个源码文件）？你用什么最小可运行例子证明自己跑通了？",
+          "source": "model_generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你怎么判断自己\"已经学会\"某个新东西了？举一个你实际用来验证的动作，别讲感受。",
+          "source": "model_generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "讲一个你在两周内上手陌生技术栈并交付功能的例子：你怎么规划这两周的学习顺序，第一天用什么最小可运行示例确认环境和工具链真的通了，又做了什么实验来证明自己理解了这个技术而不是照抄示例？过程中遇到最卡的一个报错是怎么定位的？",
+          "source": "model_generated+ai_fixed",
+          "topic": "学习能力"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "举一个你最近自学一项新技术的例子。请给出至少 3 条可被他人检验的“我学会了”的验收标准，并说明你用什么最小任务完成首次验证。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "针对一门你没用过的新技术（请举一个具体例子，如某个消息队列或某个前端框架），给出 3 条可观察、可被第三方核验的『已学会』验收信号，并说明每条信号分别能排除哪一种『假装学会』（例如只跑通 tutorial、只会调 API、只会背概念）。最后说明：招聘时用这些信号替代『当前技能栈是否匹配』会带来什么代价，你怎么控制这个代价。",
+          "source": "generated+ai_fixed",
+          "topic": "学习能力"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "假设下个迭代要你在一个不熟悉的领域交付（举例：团队从 0 接入某消息队列，或把某模块迁到不熟悉的前端框架）。请给出一份带里程碑的上手计划：每个里程碑的验收产出物是什么、时间盒多少、依赖哪些前置信息；再给出你会主动上报『来不及/学不会』的判定条件和止损方案。",
+          "source": "generated+ai_fixed",
+          "topic": "学习能力"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "团队要引入一个你没用过的开源库，你有半天时间做判断。请列出你的验证步骤和每一步的判定标准，说明哪些事你绝不会在这半天里做。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "你花两周学完并落地了一项新技术，如何把它沉淀成团队可复用的资产？请说明产出物形式，以及你用什么标准判断这份沉淀是有效的。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "basic",
+          "points": 4,
+          "question": "举一个你完全看不懂的报错，从报错原文到最终根因，你中间做了哪几步？",
+          "source": "model_generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "你最近一次从零上手一个完全没接触过的技术栈（比如 Kafka、K8s Operator、Rust），前 48 小时具体是怎么安排的？第几个小时跑通了第一个能跑的 demo？",
+          "source": "model_generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "团队要你评估一个现有栈之外的新技术（例如新的 RPC 框架或状态管理库），只给两周。请给出你的验证计划，并明确说明在什么条件下你会判定“不值得学、不值得引入”。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "团队准备引入一个此前没人用过的新中间件，你有两周做技术验证。请给出验证方案：要包含哪些生产化场景、如何设定通过/淘汰标准、如何避免被官方 demo 误导，并说明如果验证结果处于边界（如性能达标但运维复杂）如何决策。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "一次线上故障复盘后，如何把个人经验沉淀为团队可复用的知识，避免下次换人重学？请设计具体机制和验证方式，并说明知识库最容易失效的情形及应对。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "在两个技术方案之间选型时，团队里有人说“新方案更先进”。请设计一个可审计的选型过程，说明评价维度、权重来源、反事实检验，以及什么条件下应推翻原决策。",
+          "source": "generated+ai_ok",
+          "topic": "学习能力"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "某个 Agent 工具会调用外部 HTTP API。请说明你如何设计分层的超时预算与熔断器：连接、读取和总 deadline 分别如何取值与向下传递；熔断器的失败率阈值、最小请求数、open 持续时间和半开探测如何配置；超时或熔断发生时，向模型返回什么结构的结果。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "在 Agent 里给模型开放 shell / 代码执行工具时，你会如何设计权限最小化方案？请具体说明沙箱内的隔离手段（命名空间、seccomp、cgroup、挂载与网络）、凭证如何注入，以及为什么不能把长期云 AK 直接写进沙箱环境变量。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "Agent 调用一个下游 HTTP 工具偶发挂起几十秒，导致整条链路超时。请说明你如何设计超时与熔断：超时应该分几层、deadline 如何从模型侧传到工具侧、超时后哪些情况可以重试，以及熔断器的关键参数怎么取。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "工具返回的内容可能不可信（网页/文件里藏指令、下游返回错误却带 200、输出超长被截断）。你如何在 Agent 框架层判断工具结果是否可信，并把不可信内容安全地交给模型？",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "线上出现某类任务的沙箱执行成功率下降：部分请求在沙箱内被 OOM kill，部分在拉取镜像时卡住。请给出你的定位路径和改造方案，包括沙箱生命周期管理（一次性 vs 池化）与关键监控指标。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你给模型注册工具时，工具名、description 和参数 schema 具体怎么写？举一个线上被调错工具的例子，说你最后改了哪个字段。",
+          "source": "model_generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你给 Agent 定义工具 schema 时，为什么把 status 参数做成 enum 而不是 string？模型传了非法值后，你把什么内容回灌给它？",
+          "source": "model_generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你给 Agent 的工具参数 schema 是拍平成 8 个顶层字段，还是按业务嵌套成三层？为什么这么选？",
+          "source": "model_generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "Agent 执行 shell 或代码解释器工具时，沙箱在文件系统层面通常怎样实现权限最小化？请给出至少两条可实施的限制措施，并分别说明每条措施能防住什么具体风险。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "某 Agent 产品需要支持「查询订单」和「执行退款脚本」两类能力。团队在争论：退款逻辑应该封装成工具调用，还是让模型直接生成代码在沙箱里执行？请说明工具调用与代码沙箱各自的职责边界，并给出这个场景下的设计取舍：哪些能力走工具、哪些走沙箱内代码执行，为什么不能把退款这类高权限写操作开放成「沙箱内的任意代码」。",
+          "source": "generated+ai_fixed",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "候选人说「我在 Docker 容器里跑模型生成的代码就已经安全了」。请指出这种说法的问题：至少举出三类在默认容器配置下仍然成立的具体攻击面（例如读到宿主注入的环境变量中的 API Key、通过挂载的 docker.sock 或特权模式逃逸、fork 炸弹或写满磁盘耗尽资源、内网横向访问），并针对每类给出对应的隔离手段（seccomp/AppArmor、cgroup 资源限额、只读挂载与最小挂载面、非 root 用户、网络出口白名单、执行超时与一次性容器销毁）。",
+          "source": "generated+ai_fixed",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "Agent 同时配有文件、数据库、HTTP 三个工具，目前共用一份云厂商凭证。请说明最小权限原则如何落地：凭证怎样按工具粒度拆分（读写分离、只读账号、独立 IAM role）、路径与域名白名单怎么配、短期 token 的 TTL 与下发位置；并说明把全局 admin AK 写进环境变量或镜像会带来哪些具体风险。",
+          "source": "generated+ai_fixed",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "Agent 在单轮循环里串行调用 3 个外部工具，其中 HTTP 工具的上游开始超时。请给出你的设置：单次调用的连接超时与执行超时分别取多少、重试次数与退避策略、熔断的触发阈值与恢复条件、超时后回传给模型的内容格式；并说明为什么不能让 Agent 无限重试。",
+          "source": "generated+ai_fixed",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "工具返回结果可能不可信：网页抓取内容里可能夹带提示注入，命令输出可能被沙箱内恶意程序伪造。请设计一套结果可信度分级与处置策略，并说明在哪些条件下你会选择「不把原始结果交给模型」这一保守取舍。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "你的 Agent 要执行用户上传 CSV 的任意 pandas 代码，同时需要读取对象存储上的文件。请给出沙箱的权限最小化方案，并说明在哪些条件下这个方案仍会失效。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "某工具平均耗时 200ms、P99 为 3s，Agent 单轮最多并发 20 个工具调用。请说明你如何设定超时和熔断阈值、重试规则如何设计，并估算最坏情况下用户感知到的延迟。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "工具返回内容（网页正文、文件内容、第三方 API 的 error message）都会进入模型上下文。请设计一套让模型区分「数据」与「指令」的机制，并说明它为什么仍可能被绕过、你在 harness 层补什么。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "浏览器自动化 Agent 需要在沙箱中保留登录态。你会选「每会话一个长生命周期沙箱」还是「每次调用新建容器再注入凭据」？给出取舍分析，并说明两种方案各自的最坏情况。",
+          "source": "generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "Agent 执行模型生成的 shell 或 Python 代码，你的沙箱是用容器还是 microVM？说下网络、文件系统和系统调用这三块分别怎么限制的。",
+          "source": "model_generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "Agent 要跑模型生成的 Python 代码，你的沙箱是容器 + seccomp 还是 gVisor/Firecracker？网络出口怎么控？",
+          "source": "model_generated+ai_ok",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你给 Agent 定义工具时，参数 schema 里哪些字段是必须加约束的？举个你实际写过的例子，说明只写 type 不加 enum 会出什么问题。",
+          "source": "model_generated+ai_ok",
+          "topic": "工具调用"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "一个订单服务对外提供 HTTP 接口，内部依赖 MySQL 和库存服务的 RPC，并消费消息队列里的支付成功事件。请给出你的测试分层方案：单元测试、集成测试、契约测试、端到端各覆盖哪些内容，用什么手段隔离 MySQL、库存 RPC 和 MQ，以及你会用哪些指标判断这套测试是否健康。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "线上主干正在开发下一个大版本，此时生产环境发现一个 P0 缺陷需要紧急修复。请说明你的分支与版本管理操作：从哪个基线拉 hotfix、如何打 tag、如何合并回主干和发布分支、如何保证 cherry-pick 可追溯与回滚。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "一个订单创建接口要上线灰度，涉及幂等、库存扣减和消息投递。请给出测试策略和发布准出标准：单测/集成/契约/端到端各覆盖什么，灰度期间观察哪些指标和异常场景，出现资损风险如何自动或人工回滚。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "某核心读接口灰度后 P99 从 80ms 涨到 1.2s，错误率正常。请给出线上定位步骤：先看哪些指标和维度，如何用日志、链路和资源排查，如何区分是自身代码、依赖、流量还是缓存问题，并给出止损动作。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "某服务要在线修改数据库表结构（新增非空字段并迁移历史数据），要求发布期间旧版本和新版本代码可共存且可回滚。请说明 expand-contract 的具体步骤、版本管理与发布顺序、测试验证点和回滚路径。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "讲一次你亲历的线上故障（或假设一个场景：某 HTTP 接口 P99 从 200ms 涨到 2s、错误率升到 5%）。请说明：①你收到的第一个信号来自哪类监控（指标阈值/日志告警/链路追踪/用户反馈），从故障发生到你感知大约几分钟；②你按什么顺序排查，用到哪些具体手段（指标下钻、traceId 串联、变更 diff、按版本回滚二分）；③直接诱因和根本原因分别是什么；④事后补了哪条可验证的具体防护（例如新增某指标告警并设阈值、把某依赖的超时从 5s 降到 800ms、给写接口加幂等键）。",
+          "source": "model_generated+ai_fixed",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你代码评审时最常拦下的问题是什么？举一个你实际留过评论的例子，说明你要求对方怎么改。",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你提交一个 bugfix PR 时，commit message 和 PR 描述会怎么写？能拿你最近一次真实的改动举例吗？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你在 code review 里收到「这个函数太长，拆一下」的评论，你会按什么标准拆？拆到什么粒度停手？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "线上报警说接口 P99 从 200ms 涨到 800ms，你拿到这个报警后的前 10 分钟会按什么顺序做什么？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你们项目的单元测试覆盖率是多少？如果覆盖率很高但线上还是出 bug，你觉得问题出在哪？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你上一次在 Code Review 里拦下的那个 PR，具体是什么问题？你是在哪一行留的评论，最后是怎么改的？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你说你负责的模块「测试覆盖率 80%」，这个 80% 是按行还是按分支统计的，剩下 20% 没覆盖的是哪些代码，为什么不覆盖？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "代码评审时你收到一条「这里应该加锁」的评论，你判断当前上下文不需要锁，你会怎么回复这条评论并推进合入？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你有一个 800 行、涉及 6 个文件的 PR，reviewer 要求拆分。请给出具体拆法：分成几个 PR、每个 PR 的改动范围和合入顺序，如何保证每个 PR 单独合入后编译通过且行为不变，未完成逻辑如何隐藏；并说明你们团队对 PR 大小的量化上限。",
+          "source": "model_generated+ai_fixed",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你写过一个 CI 流水线，从提交到镜像可部署总共多久？最慢的那个 stage 是什么，做过哪些优化？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你提交 PR 前会跑哪些本地检查？如果 CI 和本地结果不一致，你怎么定位是哪一步环境差异导致的？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你写的 commit message 遵循什么规范？一条包含数据库迁移和接口改动的提交，你会怎么拆分？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你负责的模块单测覆盖率是 70%，这个数字是怎么统计的？剩下的 30% 你判断哪些必须补？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "接手一个没有文档的老服务，你要在两周内改一个核心逻辑，前三天你会做哪些事来降低改错的风险？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "团队用 Git 协作，你在 feature 分支上已有 3 个 commit，并已 push 到远程；此时需要把 main 的最新改动同步进来。请说明 git merge main 与 git rebase main 在提交历史形态、冲突需要解决几次、对已推送分支的影响上的差异，并指出哪种情况下不能随意 rebase。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "Git 中 merge 和 rebase 都能把一个分支的改动合到另一个分支，两者的区别是什么？为什么团队通常禁止对已推送到公共分支的提交做 rebase？",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "为什么不应把编译产物（如 target/、node_modules/）和密钥/配置文件提交进 Git 仓库？即使后来再删掉，会留下什么问题，正确做法是什么？",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "单元测试和集成测试（含端到端测试）各自验证什么？为什么通常建议按“测试金字塔”分配数量，而不能主要靠端到端测试保证质量？",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "线上服务接口 P99 延迟突然从 200ms 涨到 2s，你按什么顺序排查？请说明第一步看什么、如何先止血。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "你提交一个改动前会跑哪些检查？如果 CI 只允许挂一条流水线，你把它放在哪一步？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "线上告警：某接口 P99 从 200ms 涨到 3s，错误率没有上升，服务 CPU、内存、GC 指标正常，QPS 与昨日持平。请给出你的排查顺序和每一步的判据；并说明在根因未定位前，你会选择回滚、限流还是扩容，依据分别是什么、各自的风险边界在哪。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "线上服务在发布新版本后 10 分钟内错误率从 0.1% 升到 8%，监控告警已触发。请给出你的前 5 步排查动作顺序，并说明每一步你想排除的假设是什么。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "团队有人主张“主干开发 + 每日多次合并”，有人主张“长期特性分支”。请给出你在什么条件下会选择哪种，并说明你如何设计流程让另一种方式的缺点不至于变成事故。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "一个模块的单元测试覆盖率从 85% 掉到 60%，但线上故障率没有明显上升。请说明你会不会因此拦截合并，以及你会用哪些指标替代或补充覆盖率来判断测试是否真的有效。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "一次线上事故的根因是“某配置项在生产环境被手工改动”，而该配置在测试环境是硬编码的。请设计一套改动，使得这类问题在一个季度内可被系统性拦截，并说明每一项改动失效时的兜底是什么。",
+          "source": "generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "如果让你接手一个没有文档、没人维护的老服务，你头两天会做什么来建立可控感？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "你们团队的发布流程是怎样的？如果要做灰度发布，你按什么维度切流量、失败时怎么自动回滚？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "你要接手一个没有任何文档的遗留模块，第一周你会做哪些动作来建立可维护的认知？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "团队里有人提了一个工具链改进（比如引入新的 lint 规则或 CI 检查），你怎么判断该不该推、推的时候怎么避免引起抵触？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "线上一个接口 P99 从 200ms 涨到 1.2s，你在 30 分钟内会按什么顺序排查，每一步看哪个指标或工具？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "你接手的项目里有一段没人敢改的代码，你怎么判断它的行为边界，改动前会先补什么？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "线上接口 P99 从 200ms 涨到 800ms，你手上只有日志和监控，排查的前三步分别看什么指标？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "你线上发过一个回滚不了的版本吗？如果数据库已经加了非空字段，回滚方案该怎么设计？",
+          "source": "model_generated+ai_ok",
+          "topic": "工程素养"
+        },
+        {
+          "level": "deep",
+          "points": 4,
+          "question": "Agent 执行 shell 命令的沙箱，你用哪几层做隔离？namespace、cgroup、seccomp 各自挡住的是什么？",
+          "source": "model_generated+ai_ok",
+          "topic": "沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你写单元测试时，一个函数里有数据库读写和外部 HTTP 调用，你会怎么切分测试边界？",
+          "source": "model_generated+ai_ok",
+          "topic": "测试"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "线上发版后要紧急回滚，已经 push 到 main 的提交，你用 git revert 还是 git reset --hard？两者对同事的分支有什么不同后果？",
+          "source": "model_generated+ai_ok",
+          "topic": "版本控制"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "线上告警一晚上响了几十次，你怎么判断哪些是真问题、哪些是噪音？具体会改哪几处配置？",
+          "source": "model_generated+ai_ok",
+          "topic": "稳定性与可观测性"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "Agent 在调用工具前让模型输出 {tool, args, confidence} 结构化结果。请描述一条完整的失败重试链路：schema 校验失败后如何把错误定位（如 args.timeout 类型错误、缺少 tool 字段）反馈给模型？重试次数、退避和超时如何设置？约束解码在这条链路中放在哪一步，它能保证什么、不能保证什么？",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 2,
+          "question": "你的 Agent 调用一个内部工具时要求模型输出符合 JSON Schema 的参数对象，但线上约 4% 的调用会校验失败（字段类型错、枚举值拼错、数组元素缺必填键）。请设计一套\"校验失败→反馈→重试\"的机制：说明校验错误信息应该如何构造后回灌给模型、重试次数与终止条件如何设定、以及如何避免重试放大下游副作用。",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 2,
+          "question": "为了把结构化输出的合法率从后处理校验提升到生成阶段，你打算引入约束解码（constrained decoding）。请说明如何把一份 JSON Schema 编译成解码时可用的约束（正则 / CFG / 有限状态机），在每一步 token 采样时如何做 logit mask，以及在流式输出和 KV cache 复用的场景下这套方案会遇到什么具体问题。",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 2,
+          "question": "Agent 拿到的结构化结果里，可选字段时有时无：模型可能完全不输出该键、输出 null、输出空字符串或空数组，三种情况在你的下游语义里并不等价。请设计字段缺失的兜底方案，说明如何在解析层区分这几种情况、必填字段缺失时如何处理、以及下游消费方如何感知某字段是模型给的还是系统填的默认值。",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 2,
+          "question": "某天结构化输出的解析成功率从 99% 掉到 91%，但模型和 prompt 都没改。请给出你的排查路径：要看哪些指标、按什么维度切分、如何快速定位是模型侧问题（截断、stop 序列、采样参数）还是解析侧问题（markdown 代码块包裹、转义、前后缀文本），以及需要落盘哪些数据才能支持事后归因。",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你用 function calling 让模型返回结构化参数时，如果模型把枚举字段填成了不在 schema 里的值，你的代码在哪一层拦下来、返回什么给模型重试？",
+          "source": "model_generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "结构化输出用 JSON mode 和用 function calling 的 tool schema，在实际项目里你选哪个，判断依据是什么？",
+          "source": "model_generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "让模型从长文档里抽实体列表时，输出经常在最后一个对象处被截断成非法 JSON，你怎么定位是 max_tokens 不够还是模型本身写崩了？",
+          "source": "model_generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "模型返回的 function call 参数偶尔是坏的 JSON（括号没闭合、多了尾逗号），你在链路的哪几层做兜底？",
+          "source": "model_generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "在按 JSON Schema 顺序做约束解码（如 vLLM guided_json / xgrammar、OpenAI strict mode）时，同一 schema 里既有 reasoning 字段又有 final_answer 字段，你会把 reasoning 放在 properties 前面还是后面？依据是什么？如果目标模型或服务端并不保证按 schema 顺序生成，你的结论还成立吗？",
+          "source": "model_generated+ai_fixed",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你们用的是 JSON mode 还是 tool/function calling 的 schema？这两者在\"保证输出结构\"上的边界分别在哪？",
+          "source": "model_generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "在 Agent 应用里，要求模型返回 {\"tool\": string, \"args\": object, \"confidence\": number} 这类结构化结果时，JSON Schema 中的 required、enum、additionalProperties 分别约束什么？仅靠 prompt 写“请返回 JSON”与在代码里做 schema 校验，在可解析性、字段完整性、类型/枚举合法性上有什么区别？",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "在 LLM 应用里，结构化输出通常指输出必须符合预先定义好的 schema（例如 JSON Schema 或 Pydantic 模型）。请举一个你实际用过的字段例子，并说明：如果不用结构化输出，改用正则表达式或再调用一次 LLM 来抽取，具体会在哪一步失败？",
+          "source": "generated+ai_fixed",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "为什么 Agent 场景比普通聊天更依赖结构化输出？请结合至少两个 Agent 环节说明。",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "常见的结构化输出实现方式有哪几类？请说明它们在“保证格式”上的强弱差别。",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "你有一个 Pydantic 模型 Order{id: str, amount: float, currency: Literal['CNY','USD'], items: list[Item]}，其中 items 元素必填 sku，notes 为可选。模型返回的 JSON 能解析但校验报错。请说明：你会把哪些错误归为「可修复/可降级」、哪些必须重试；可选字段缺失与必填字段缺失分别怎么处理；以及为什么不能在校验失败后直接把半成品对象写入数据库。",
+          "source": "generated+ai_fixed",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "Agent 每一步都要输出 {thought, action, action_input} 这种结构，模型偶尔输出带 markdown 代码块的 JSON，你的解析器怎么写才能不抛异常？",
+          "source": "model_generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "当结构化输出 schema 频繁演进且包含可选字段时，Agent 容易出现字段缺失、类型漂移和重试死循环。请给出边界处理与取舍：可选字段缺失时用默认值、null 还是判失败？schema 如何演进以兼容旧输出？重试预算耗尽后如何降级？约束解码可能带来哪些副作用（如强制合法但语义错误、推理质量下降、额外 token 开销）？",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "Agent 调用工具时要求模型返回严格符合 JSON Schema 的参数。一次调用返回 200，但字段 `start_date` 是 \"下周三\" 而不是 ISO 日期。你如何设计重试与错误反馈？在什么条件下应当放弃重试？",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "你给 Agent 的 structured output 加上了约束解码（grammar / JSON Schema 强约束）。请说明它在哪些情况下仍然会产出错误结果，以及为什么不能对所有字段都施加同等强度的约束。",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "模型返回的 JSON 能通过 schema 校验，但某个业务关键字段是 null、空字符串或整个键不存在。你的兜底逻辑如何区分这三种情况，并避免静默错误？",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "一次输出很大的嵌套 schema（例如 30 个字段、三层嵌套的工具参数）时，你观察到漏字段和层级错位明显增多。请给出诊断与两种可选改造方案，并说明各自新增的失效点。",
+          "source": "generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "结构化输出要保证稳定，你用哪些指标衡量它，采样多少条、按什么维度分组看？",
+          "source": "model_generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "deep",
+          "points": 3,
+          "question": "如果要求结构化输出 100% 语法合法，你们上约束解码了吗？用的是 Outlines、XGrammar 还是 llama.cpp 的 GBNF？",
+          "source": "model_generated+ai_ok",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "在 200 条固定离线评估集上，某次改动的通过率从 82% 掉到 79%，团队想直接把它设为 CI 阻塞条件。请说明你会怎么判断这次回退是否真实、回归门槛应如何配置（含样本量与统计口径）。",
+          "source": "generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你要为一个工具调用型 Agent 从零搭建离线评估集。请给出具体方案：样本从哪里采、怎么分层、每层大致多少条、如何保证评估集不被 prompt 调优污染。",
+          "source": "generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "新版本 Agent 要上线，请设计离线回归门槛与放量策略：主指标和辅助指标怎么选，阈值怎么定，如何避免几百条样本上的指标噪声导致误判？",
+          "source": "generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "团队用 LLM-as-judge 做 Agent 响应质量评估。你如何验证 judge 与人工判断对齐、对齐到什么程度才敢用它做发版决策？如何控制位置偏差和长度偏差？",
+          "source": "generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "线上监控显示某 Agent 任务成功率一周内从 82% 掉到 74%。请说明你会怎样结合评估集与可观测数据把问题定位到具体环节，以及如何确认修复有效。",
+          "source": "generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你搭建 Agent 评估集时，用例从线上日志抽样还是人工构造？比例是多少，抽样时怎么保证覆盖到失败路径？",
+          "source": "model_generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "多轮 Agent 场景下，评估用例的会话状态怎么重置？如果上一轮的工具返回污染了下一轮，你在评测框架里怎么隔离？",
+          "source": "model_generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你的评估集跑出来分数波动很大，同一批用例两次结果差 15 个点，怎么排查是 Agent 随机性还是评估器的问题？",
+          "source": "model_generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 3,
+          "question": "你们 Agent 的评估集如何分层构造？请给出核心集规模、采样时按哪些维度分层（工具调用链长度/意图类别），以及如何专门构造“多步工具调用中途失败”的 case——失败注入在第几步、注入什么类型的错误、判定标准是什么？",
+          "source": "model_generated+ai_fixed",
+          "topic": "评估体系"
+        },
+        {
+          "level": "advanced",
+          "points": 4,
+          "question": "你用 LLM-as-judge 给 Agent 的最终答案打分，怎么证明这个 judge 本身是可信的？",
+          "source": "model_generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "为一个会调用外部工具（如检索、数据库查询）的 Agent 搭建离线评估集，一条样本至少需要包含哪几类字段或资产？并说明判定一条样本\"通过\"的机制通常有哪几种、优先用哪种。",
+          "source": "generated+ai_ok",
+          "topic": "评估体系"
+        },
+        {
+          "level": "basic",
+          "points": 3,
+          "question": "你们已有一个 Agent 应用在线上运行，同时有一套离线评估集和线上监控。请说明：①离线评估集的用例从哪里来、如何保证可重复与可对比；②线上监控具体采集哪些指标与日志、在什么时机触发人工介入；③举一个『离线集全部通过但线上指标变差』的具体场景，并说明如何把线上失败 case 回流进离线集。",
+          "source": "generated+ai_fixed",
+          "topic": "评估体系"
+        }
+      ],
+      "preview": [
+        {
+          "level": "basic",
+          "points": [
+            "明确 Planner 只产出可执行的任务分解与验收标准，Executor 只按任务执行并回传结果与中间产物，Reviewer 只做校验与打回，不越权修改任务目标或代替执行",
+            "交接契约中包含任务目标、输入依赖、输出格式/验收标准、上下文引用（而非全量上下文复制）",
+            "指出下游不应重新推断上游已确定的决策（如目标、约束、验收口径），避免职责重叠导致的重复推理或相互推翻"
+          ],
+          "question": "在一个包含 Planner、Executor、Reviewer 三个 Agent 的编排系统中，请说明这三个角色的职责边界应如何划分，并指出哪些信息必须在角色交接时显式传递，哪些不应由下游 Agent 重新推断。",
+          "topic": "多 Agent 编排"
+        },
+        {
+          "level": "advanced",
+          "points": [
+            "能给出“解析→schema 校验→提取错误路径/原因→带错误信息重试”的链路，并提到最大重试 2-3 次、指数退避和总超时上限",
+            "能把校验错误路径（如 args.timeout、required tool）回填到重试 prompt，而不是只重复原请求",
+            "能说明约束解码只能保证输出符合语法/schema 结构，不能保证 args 语义正确、工具可执行或 confidence 校准"
+          ],
+          "question": "Agent 在调用工具前让模型输出 {tool, args, confidence} 结构化结果。请描述一条完整的失败重试链路：schema 校验失败后如何把错误定位（如 args.timeout 类型错误、缺少 tool 字段）反馈给模型？重试次数、退避和超时如何设置？约束解码在这条链路中放在哪一步，它能保证什么、不能保证什么？",
+          "topic": "结构化输出"
+        },
+        {
+          "level": "deep",
+          "points": [
+            "成因是对固定小评估集的过拟合与分布漂移：prompt 迭代中隐含看过样本，且线上请求分布已偏离评估集，需检测污染（样本是否出现在 prompt/上下文里）并保留从未用于迭代的 holdout 集",
+            "评估集要滚动更新：定期从线上日志回流新失败案例替换饱和用例，保持难度分布；同时用 shadow/A-B 校准离线分数与线上指标的相关性，相关不成立时离线分数不作为发布依据",
+            "人工对齐预算按失败代价分层：高风险/低置信样本（judge 多次分歧、模型自评低分）优先人审，并定期用人工标注校验 LLM-judge 的一致率（如与人工一致率低于约 80% 就修 rubric 或换判官）"
+          ],
+          "question": "离线评估集上准确率已到 95%，团队继续针对它调 prompt 把分数刷到 98%，但线上用户满意度没变甚至下降。请说明这种失效的成因，以及你会怎么改评估体系（含评估集维护与人工对齐预算的分配）。",
+          "topic": "评估体系"
+        },
+        {
+          "level": "basic",
+          "points": [
+            "只挂载任务必需的目录：工作区可读写、其余依赖目录以只读方式挂载；禁止访问 /etc、~/.ssh 和云凭证文件；以非 root 低权限用户运行",
+            "对路径做规范化（realpath）后再做前缀白名单校验，防止 ../ 穿越和符号链接逃逸到工作区外",
+            "敏感环境变量（API key、token）不注入工具进程，或通过白名单显式传入"
+          ],
+          "question": "Agent 执行 shell 或代码解释器工具时，沙箱在文件系统层面通常怎样实现权限最小化？请给出至少两条可实施的限制措施，并分别说明每条措施能防住什么具体风险。",
+          "topic": "工具与沙箱"
+        },
+        {
+          "level": "advanced",
+          "points": [
+            "至少列出 2–3 个备选方案，淘汰理由基于具体维度（实现复杂度、性能指标、团队熟悉度、交付周期、长期维护成本）",
+            "决策依据可验证：有压测数据、POC 结论、风险清单或排期评估，而不是“感觉这个更好”",
+            "事后有验证证据（线上监控指标、返工量、后续改动成本、故障次数），并能指出当时判断偏差在哪、如果重做会改哪一步"
+          ],
+          "question": "选一个你项目中“最难的技术点”做技术复盘：说明当时有哪些备选方案、各自被淘汰的理由、最终决策依据，以及事后你用什么证据判断这个选择是对的或错的。",
+          "topic": "项目复盘"
+        },
+        {
+          "level": "deep",
+          "points": [
+            "排查顺序与判据：先确认是单实例还是全集群、是否与发布、配置、依赖方变更的时间点对齐；再用 span 或分段日志区分耗时花在自身还是下游，依次看线程池和连接池等待队列、下游 RPC 的 P99、DB 慢查询与锁等待、网络重传。“CPU 正常 + 延迟升高”通常指向排队、锁竞争或下游变慢，而不是自身算力不足",
+            "决策依据：有明确近期发布或配置变更时优先回滚（可逆、成本最低）；下游变慢且无法回滚时先限流或降级，保护自身线程池；扩容只在瓶颈是自身可水平扩展的并发资源时有效，对下游变慢或锁竞争无效甚至加剧",
+            "止损与边界：先止损再定位，保留现场（线程栈、火焰图、连接池指标、慢日志）；回滚前确认 DB schema 与消息格式向后兼容、是否已写入脏数据，必要时配合数据修复或开关降级而不是直接回滚"
+          ],
+          "question": "线上告警：某接口 P99 从 200ms 涨到 3s，错误率没有上升，服务 CPU、内存、GC 指标正常，QPS 与昨日持平。请给出你的排查顺序和每一步的判据；并说明在根因未定位前，你会选择回滚、限流还是扩容，依据分别是什么、各自的风险边界在哪。",
+          "topic": "工程素养"
+        }
+      ],
+      "topics": [
+        "Agent",
+        "Agent 工具设计",
+        "Agent 评估",
+        "Git 协作",
+        "上下文工程",
+        "代码评审",
+        "代码评审与协作",
+        "多 Agent 编排",
+        "学习能力",
+        "工具与沙箱",
+        "工具调用",
+        "工程素养",
+        "沙箱",
+        "测试",
+        "版本控制",
+        "稳定性与可观测性",
+        "结构化输出",
+        "评估体系",
+        "项目复盘"
+      ],
+      "total": 262
+    }
+  },
+  "registration": {
+    "status": 200,
+    "body": {
+      "existing": 0,
+      "first": true,
+      "open": true
+    }
+  },
+  "me_anon": {
+    "status": 200,
+    "body": {
+      "role": "admin",
+      "user": "local"
+    }
+  },
+  "history_anon": {
+    "status": 200,
+    "body": {
+      "count": 80,
+      "text": "  序号  时间              岗位        轮次  均分  最深  模式   短板\n  ----------------------------------------------------------------------------\n     1  <DATE> 16:42  agent_app      9  3.07     1  unknown  -\n     2  <DATE> 16:43  agent_app      9  3.07     1  unknown  -\n     3  <DATE> 16:43  agent_app     18  3.07     4  unknown  -\n     4  <DATE> 16:44  agent_app     18  2.10     0  unknown  -\n     5  <DATE> 16:45  agent_app     18  2.10     4  unknown  -\n     6  <DATE> 16:45  agent_app     18  2.10     4  unknown  -\n     7  <DATE> 16:56  agent_app     17  2.16     4  unknown  -\n     8  <DATE> 16:56  agent_app     18  2.96     5  unknown  -\n     9  <DATE> 17:02  agent_app     18  2.84     5  unknown  -\n    10  <DATE> 17:23  agent_app     18  2.84     5  unknown  -\n    11  <DATE> 17:25  agent_app     18  2.84     5  unknown  -\n    12  <DATE> 17:30  agent_app     18  2.84     5  unknown  -\n    13  <DATE> 17:32  agent_app     18  2.84     5  unknown  -\n    14  <DATE> 17:51  agent_app     18  2.84     5  unknown  -\n    15  <DATE> 18:46  agent_app     18  2.84     5  unknown  -\n    16  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    17  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    18  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    19  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    20  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    21  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    22  <DATE> 18:53  agent_app     18  2.84     5  unknown  -\n    23  <DATE> 18:56  agent_app     18  2.84     5  unknown  -\n    24  <DATE> 18:56  agent_app     18  2.84     5  unknown  -\n    25  <DATE> 18:56  agent_app     18  2.84     5  unknown  -\n    26  <DATE> 19:01  agent_app     18  2.84     5  unknown  -\n    27  <DATE> 19:01  agent_app     18  2.84     5  unknown  -\n    28  <DATE> 19:01  agent_app     18  2.84     5  unknown  -\n    29  <DATE> 19:01  agent_app     18  2.84     5  unknown  -\n    30  <DATE> 19:04  agent_app     18  2.84     5  unknown  -\n    31  <DATE> 19:04  agent_app     18  2.84     5  unknown  -\n    32  <DATE> 19:05  agent_app     18  2.84     5  unknown  -\n    33  <DATE> 19:05  agent_app     18  2.84     5  unknown  -\n    34  <DATE> 19:09  agent_app     18  2.84     5  unknown  -\n    35  <DATE> 19:10  agent_app     18  2.84     5  unknown  指标意识、tradeoff\n    36  <DATE> 19:14  agent_app     18  2.84     5  unknown  tradeoff、系统视角\n    37  <DATE> 19:14  agent_app     18  2.60     5  unknown  tradeoff、系统视角\n    38  <DATE> 19:18  agent_app     15  3.00     5  unknown  -\n    39  <DATE> 19:21  agent_app     15  3.00     5  unknown  -\n    40  <DATE> 19:24  agent_app     15  3.00     5  unknown  -\n    41  <DATE> 19:28  agent_app      9  3.00     2  unknown  -\n    42  <DATE> 19:32  agent_app     13  3.00     4  unknown  -\n    43  <DATE> 19:36  agent_app     13  3.00     4  unknown  -\n    44  <DATE> 19:44  agent_app     13  2.02     2  unknown  基础概念、指标意识\n    45  <DATE> 19:46  agent_app     12  1.98     2  unknown  基础概念、指标意识\n    46  <DATE> 19:50  agent_app      8  2.95     1  unknown  tradeoff、系统视角\n    47  <DATE> 19:50  agent_app      8  1.82     0  unknown  基础概念、项目 ownership\n    48  <DATE> 19:52  agent_app     10  1.80     0  real   基础概念、项目 ownership\n    49  <DATE> 19:53  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    50  <DATE> 19:54  agent_app      8  1.93     1  real   基础概念、项目 ownership\n    51  <DATE> 19:55  agent_app      8  2.17     1  real   项目 ownership、tradeoff\n    52  <DATE> 20:20  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    53  <DATE> 20:20  agent_app      9  3.00     2  mock   tradeoff、系统视角\n    54  <DATE> 20:21  agent_app     10  2.04     0  real   基础概念、项目 ownership\n    55  <DATE> 20:24  agent_app     15  1.73     5  real   基础概念、指标意识\n    56  <DATE> 20:37  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    57  <DATE> 20:37  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    58  <DATE> 20:38  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    59  <DATE> 20:39  agent_app     17  1.72     5  real   基础概念、指标意识\n    60  <DATE> 14:18  agent_app     11  2.98     3  mock   tradeoff、系统视角\n    61  <DATE> 14:23  ai_algo       17  1.60     5  mock   基础概念、项目 ownership\n    62  <DATE> 15:12  agent_app     18  2.84     5  mock   指标意识、tradeoff\n    63  <DATE> 15:22  agent_app     18  2.84     5  mock   指标意识、tradeoff\n    64  <DATE> 15:22  agent_app     18  2.84     5  mock   指标意识、tradeoff\n    65  <DATE> 15:23  agent_app      9  2.04     2  real   基础概念、指标意识\n    66  <DATE> 16:02  agent_app      9  3.00     2  mock   指标意识、tradeoff\n    67  <DATE> 16:24  agent_app     13  2.97     4  mock   指标意识、tradeoff\n    68  <DATE> 16:40  agent_app      9  3.00     2  mock   指标意识、tradeoff\n    69  <DATE> 16:41  agent_app     13  2.97     4  mock   指标意识、tradeoff\n    70  <DATE> 16:42  agent_app     11  2.98     3  mock   指标意识、tradeoff\n    71  <DATE> 17:38  agent_app     11  2.98     3  mock   指标意识、tradeoff\n    72  <DATE> 17:38  agent_app     11  2.98     3  mock   指标意识、tradeoff\n    73  <DATE> 17:45  ai_algo        1  2.60     0  mock   tradeoff、系统视角\n    74  <DATE> 17:46  ai_algo        1  2.60     0  mock   tradeoff、系统视角\n    75  <DATE> 17:46  agent_app      8  2.95     1  mock   指标意识、tradeoff\n    76  <DATE> 17:46  agent_app      8  2.95     1  mock   指标意识、tradeoff\n    77  <DATE> 17:47  agent_app      8  2.95     1  mock   指标意识、tradeoff\n    78  <DATE> 11:42  ai_algo        1  2.60     0  mock   tradeoff、系统视角\n    79                                   0  0.00     0  unknown  -\n    80                                   0  0.00     0  unknown  -\n\n  真实模型场次：7 / 80（mock 与旧记录不参与趋势）\n  最近两场均分：1.72 → 2.04  ↑ +0.32\n  最深卡点：5 → 2 层\n\n  反复出现的短板（≥2 场）：\n    - 项目 ownership：7 场\n    - tradeoff：7 场\n    - 系统视角：7 场\n    - 基础概念：6 场\n    - 业务视角：4 场\n    - 指标意识：3 场\n\n  说明：单场样本量小，趋势只反映『最近两场』，不构成能力结论。"
+    }
+  },
+  "report_anon": {
+    "status": 200,
+    "body": {
+      "error": "会话不存在"
+    }
+  },
+  "admin_anon": {
+    "status": 200,
+    "body": {
+      "sessions": [
+        {
+          "avg_score": 2.6,
+          "created_at": "<TIME>",
+          "finish_reason": "user_quit",
+          "phase": "FEEDBACK",
+          "role": "ai_algo",
+          "sid": "aud_20261126_114252_972c",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_214129_760a",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_214111_82a6",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_213430_1a18",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "zhangsan"
+        },
+        {
+          "avg_score": 2.6,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_211417_07e1",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "demo"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_210952_7842",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "eve"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_190247_804c",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "dave"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_190206_0889",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "carol"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "backend",
+          "sid": "aud_20261124_190137_601c",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "bob"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_142506_ff78",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "dkuser3"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_142455_c918",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "dkuser2"
+        }
+      ],
+      "users": [
+        {
+          "avg_score": 0.87,
+          "last_at": "<TIME>",
+          "sessions": 3,
+          "turns": 1,
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 0,
+          "user": "zhangsan"
+        },
+        {
+          "avg_score": 2.4,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 1,
+          "user": "eve"
+        },
+        {
+          "avg_score": 0.0,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 0,
+          "user": "dkuser3"
+        },
+        {
+          "avg_score": 0.0,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 0,
+          "user": "dkuser2"
+        },
+        {
+          "avg_score": 2.6,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 1,
+          "user": "demo"
+        },
+        {
+          "avg_score": 2.4,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 1,
+          "user": "dave"
+        },
+        {
+          "avg_score": 2.4,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 1,
+          "user": "carol"
+        },
+        {
+          "avg_score": 0.0,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 0,
+          "user": "bob"
+        }
+      ]
+    }
+  },
+  "register_short_pwd": {
+    "status": 400,
+    "body": {
+      "error": "密码至少 6 位",
+      "ok": false
+    }
+  },
+  "register": {
+    "status": 200,
+    "body": {
+      "first": true,
+      "ok": true,
+      "role": "admin",
+      "user": "snap_user"
+    }
+  },
+  "login_wrong_pwd": {
+    "status": 401,
+    "body": {
+      "error": "用户名或密码不对"
+    }
+  },
+  "login": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "role": "admin",
+      "user": "snap_user"
+    }
+  },
+  "me": {
+    "status": 200,
+    "body": {
+      "role": "admin",
+      "user": "local"
+    }
+  },
+  "start": {
+    "status": 200,
+    "body": {
+      "coach": true,
+      "engine": "mock（规则替身，只验证流程）",
+      "progress": {
+        "elements": {},
+        "ladder_level": 0,
+        "ladder_name": "",
+        "max_turns": 4,
+        "phase": "OPENING",
+        "phase_desc": "开场，说明规则，让候选人放松",
+        "phase_index": 1,
+        "phase_total": 6,
+        "project": "",
+        "turn": 0
+      },
+      "projects": [
+        "姓名：张三  求职方向：AI 应用开发"
+      ],
+      "question": "我们开始吧。请用两分钟介绍一下你自己，重点讲你最想被深挖的那个项目。",
+      "resume_quality": {
+        "advice": "",
+        "metrics_ratio": 1.0,
+        "projects": 1,
+        "stack_ratio": 1.0,
+        "weak": []
+      },
+      "sid": "aud_20261126_114329_cdbd",
+      "web": false
+    }
+  },
+  "answer": {
+    "status": 200,
+    "body": {
+      "card": {
+        "dims": {
+          "accuracy": 3,
+          "boundary": 2,
+          "clarity": 4,
+          "depth": 2,
+          "tradeoff": 2
+        },
+        "enabled": true,
+        "gaps": [
+          "停在「做了什么」，补「怎么实现、为什么这么做」",
+          "没提替代方案与代价，补一句「我否掉了 X，因为 Y」",
+          "没讲方案什么时候失效，补「数据量/并发翻倍会先崩在哪」"
+        ],
+        "ideal": "",
+        "score": 2.6,
+        "source": "rule",
+        "tips": [
+          "先给结论与数字（做了什么、结果多少）。",
+          "再给依据（怎么测的、对比基线是什么）。",
+          "最后给代价与边界（这个方案的缺点、什么情况下会失效）。"
+        ],
+        "verdict": "partial",
+        "weakest": "depth",
+        "why": "判定 partial，均分 2.6。最弱在 depth（2 分）——停在「做了什么」，补「怎么实现、为什么这么做」。"
+      },
+      "done": false,
+      "eval": {
+        "avg": 2.6,
+        "evidence": "召回从 71% 提到 82%，300/500/800 三档实",
+        "fact_detail": "",
+        "fact_status": "unverifiable",
+        "verdict": "partial",
+        "weakest": "depth"
+      },
+      "progress": {
+        "elements": {},
+        "ladder_level": 0,
+        "ladder_name": "",
+        "max_turns": 4,
+        "phase": "SELF_INTRO",
+        "phase_desc": "自我介绍，提炼候选人的项目线索",
+        "phase_index": 2,
+        "phase_total": 6,
+        "project": "",
+        "turn": 1
+      },
+      "question": "你提到这个项目用了向量库做检索，先说说为什么要用检索，而不是把资料直接塞进上下文？"
+    }
+  },
+  "end": {
+    "status": 200,
+    "body": {
+      "dims": {
+        "accuracy": 3.0,
+        "boundary": 2.0,
+        "clarity": 4.0,
+        "depth": 2.0,
+        "tradeoff": 2.0
+      },
+      "done": true,
+      "finish_reason": "user_quit",
+      "ok": true,
+      "report": "==============================================================\n审计 · 会话 aud_20261126_114329_cdbd · 事件 10 条\n结束原因：用户主动结束（user_quit） · 要素覆盖 0%\n不变量：fatal 0 · warn 0\n评分证据：1/1 可在答案原文找到（可核验 100%，疑似编造 0 条）\n成本：2059/60000 token · ¥0.0000 · 降级 0 级\n==============================================================\n\n==============================================================\n面试报告 · 岗位 ai_algo\n轮次 1 · 均分 2.6 · 最弱维度 depth\n==============================================================\n\n【各维度得分】\n  accuracy   3.0   ███\n  depth      2.0   ██\n  tradeoff   2.0   ██\n  boundary   2.0   ██\n  clarity    4.0   ████\n\n【各阶段均分】（避免单一均分掩盖短板）\n  OPENING        2.6   (1轮) ███  ← 最弱\n\n【能力画像】（这个人强不强，与上面的系统指标是两层）\n  mock 模式：不计算能力分数。\n  原因：mock 评分由关键词规则生成，打出来的分会让人误以为是真实评估。\n  想看真实画像，请用 --llm auto（会连 DSH 免费中继）或配置远程 API。\n  本画像仅反映【本场表现】，不等于真实能力评估；单场面试样本量小，不宜用于任何录用决策。\n\n【阶段简报】（证据聚合：已答到 / 回避 / 已确认 / 可疑 / 待补）\n  已确认事实：当前项目·召回率=82%\n  待补：话题:微调与 LoRA；话题:RAG 检索增强生成；话题:Transformer 注意力机制\n\n【深挖要素覆盖】\n  说明：统计的是候选人**回答里实际讲到**的要素，不是问过的题数。\n  姓名：张三  求职方向：AI 应用开发: 已答到 0/5\n      · 目标: 未问到\n      · baseline: 未问到\n      · 指标: 未问到\n      · 失败方案: 未问到\n      · 个人贡献: 未问到\n\n【技术题库】（本场用了哪些题，以及题库整体状态）\n  （本场没有走到技术问答环节）\n  题库：722 题 · 难度 {'basic': 131, 'advanced': 369, 'deep': 222} · 最旧 3 天\n\n【简历体检】（输入信息够不够，直接决定深挖质量）\n  项目 1 个 · 有技术栈 100% · 有量化指标 100%\n\n【联网核对】（有资料才判对错，没资料一律标 unverifiable）\n  本场未开启联网（加 --web 开启）\n\n【提问质量】（流程指标之外的下限检查）\n  （无法评估提问质量：没有深挖轮次）\n\n【短板诊断】（区分「不会」与「没意识到」，训练动作不同）\n  1. tradeoff（没意识）\n     证据：tradeoff 均分偏低（2.0）\n     动作：每个选型补一句『我否掉了 X，因为 Y』\n  2. 系统视角（没意识）\n     证据：depth 均分偏低（2.0）\n     动作：补一个失效场景 + 你怎么发现的（监控指标/告警）\n\n【深挖轨迹】\n  #1  [OPENING/L0] partial 我们开始吧。请用两分钟介绍一下你自己，重点讲你最想被深挖的那个项目。\n\n【反馈】\n【总评】最致命的是 depth：停在「做了什么」，补「怎么实现、为什么这么做」。\n【哪里答对了】\n1. 这次没有出现能直接当范例的回答，先把「做了什么 + 结果数字」讲清。\n【哪里答虚了】\n1. 「召回从 71% 提到 82%，300/500/800 三档实…」——缺停在「做了什么」，补「怎么实现、为什么这么做」。\n  1. tradeoff（没意识）\n     证据：tradeoff 均分偏低（2.0）\n     动作：每个选型补一句『我否掉了 X，因为 Y』\n  2. 系统视角（没意识）\n     证据：depth 均分偏低（2.0）\n     动作：补一个失效场景 + 你怎么发现的（监控指标/告警）\n【面试官下一步会怎么追】\n1. 这一步具体怎么实现的？中间哪一步最容易出错？\n2. 如果不用这个组件，你会怎么替代？\n【下一步训练动作】\n1. 每个选型补一句『我否掉了 X，因为 Y』\n2. 补一个失效场景 + 你怎么发现的（监控指标/告警）\n3. 每个项目准备一句「我否掉了 X，因为 Y」——覆盖权衡维度。\n\n最深层级：是什么"
+    }
+  },
+  "report": {
+    "status": 200,
+    "body": {
+      "dims": {
+        "accuracy": 3.0,
+        "boundary": 2.0,
+        "clarity": 4.0,
+        "depth": 2.0,
+        "tradeoff": 2.0
+      },
+      "profile": {
+        "available": true,
+        "confidence": 0.2,
+        "confidence_note": "1 轮有效评分，mock 评分（仅验证流程），样本不足，结论仅供参考",
+        "disclaimer": "本画像仅反映【本场表现】，不等于真实能力评估；单场面试样本量小，不宜用于任何录用决策。",
+        "evidence_turns": 1,
+        "ksa": {
+          "A 态度": 10.0,
+          "K 知识": 0.0,
+          "S 技能": 55.0
+        },
+        "ksa_note": "A（态度）当前用「深挖能打到反事实层」代理，代表复盘与 ownership 意愿",
+        "level": "待加强",
+        "mode": "mock",
+        "overall": 27.3,
+        "strongest": "语言表达",
+        "values": {
+          "communication": 75.0,
+          "engineering": 35.0,
+          "project_exp": 21.7,
+          "tech_breadth": 0.0,
+          "thinking_depth": 10.0
+        },
+        "weakest": "技术广度"
+      },
+      "report": "==============================================================\n审计 · 会话 aud_20261126_114329_cdbd · 事件 10 条\n结束原因：用户主动结束（user_quit） · 要素覆盖 0%\n不变量：fatal 0 · warn 0\n评分证据：1/1 可在答案原文找到（可核验 100%，疑似编造 0 条）\n成本：2059/60000 token · ¥0.0000 · 降级 0 级\n==============================================================\n\n==============================================================\n面试报告 · 岗位 ai_algo\n轮次 1 · 均分 2.6 · 最弱维度 depth\n==============================================================\n\n【各维度得分】\n  accuracy   3.0   ███\n  depth      2.0   ██\n  tradeoff   2.0   ██\n  boundary   2.0   ██\n  clarity    4.0   ████\n\n【各阶段均分】（避免单一均分掩盖短板）\n  OPENING        2.6   (1轮) ███  ← 最弱\n\n【能力画像】（这个人强不强，与上面的系统指标是两层）\n  mock 模式：不计算能力分数。\n  原因：mock 评分由关键词规则生成，打出来的分会让人误以为是真实评估。\n  想看真实画像，请用 --llm auto（会连 DSH 免费中继）或配置远程 API。\n  本画像仅反映【本场表现】，不等于真实能力评估；单场面试样本量小，不宜用于任何录用决策。\n\n【阶段简报】（证据聚合：已答到 / 回避 / 已确认 / 可疑 / 待补）\n  已确认事实：当前项目·召回率=82%\n  待补：话题:微调与 LoRA；话题:RAG 检索增强生成；话题:Transformer 注意力机制\n\n【深挖要素覆盖】\n  说明：统计的是候选人**回答里实际讲到**的要素，不是问过的题数。\n  姓名：张三  求职方向：AI 应用开发: 已答到 0/5\n      · 目标: 未问到\n      · baseline: 未问到\n      · 指标: 未问到\n      · 失败方案: 未问到\n      · 个人贡献: 未问到\n\n【技术题库】（本场用了哪些题，以及题库整体状态）\n  （本场没有走到技术问答环节）\n  题库：722 题 · 难度 {'basic': 131, 'advanced': 369, 'deep': 222} · 最旧 3 天\n\n【简历体检】（输入信息够不够，直接决定深挖质量）\n  项目 1 个 · 有技术栈 100% · 有量化指标 100%\n\n【联网核对】（有资料才判对错，没资料一律标 unverifiable）\n  本场未开启联网（加 --web 开启）\n\n【提问质量】（流程指标之外的下限检查）\n  （无法评估提问质量：没有深挖轮次）\n\n【短板诊断】（区分「不会」与「没意识到」，训练动作不同）\n  1. tradeoff（没意识）\n     证据：tradeoff 均分偏低（2.0）\n     动作：每个选型补一句『我否掉了 X，因为 Y』\n  2. 系统视角（没意识）\n     证据：depth 均分偏低（2.0）\n     动作：补一个失效场景 + 你怎么发现的（监控指标/告警）\n\n【深挖轨迹】\n  #1  [OPENING/L0] partial 我们开始吧。请用两分钟介绍一下你自己，重点讲你最想被深挖的那个项目。\n\n【反馈】\n【总评】最致命的是 depth：停在「做了什么」，补「怎么实现、为什么这么做」。\n【哪里答对了】\n1. 这次没有出现能直接当范例的回答，先把「做了什么 + 结果数字」讲清。\n【哪里答虚了】\n1. 「召回从 71% 提到 82%，300/500/800 三档实…」——缺停在「做了什么」，补「怎么实现、为什么这么做」。\n  1. tradeoff（没意识）\n     证据：tradeoff 均分偏低（2.0）\n     动作：每个选型补一句『我否掉了 X，因为 Y』\n  2. 系统视角（没意识）\n     证据：depth 均分偏低（2.0）\n     动作：补一个失效场景 + 你怎么发现的（监控指标/告警）\n【面试官下一步会怎么追】\n1. 这一步具体怎么实现的？中间哪一步最容易出错？\n2. 如果不用这个组件，你会怎么替代？\n【下一步训练动作】\n1. 每个选型补一句『我否掉了 X，因为 Y』\n2. 补一个失效场景 + 你怎么发现的（监控指标/告警）\n3. 每个项目准备一句「我否掉了 X，因为 Y」——覆盖权衡维度。\n\n最深层级：是什么"
+    }
+  },
+  "history": {
+    "status": 200,
+    "body": {
+      "count": 81,
+      "text": "  序号  时间              岗位        轮次  均分  最深  模式   短板\n  ----------------------------------------------------------------------------\n     1  <DATE> 16:42  agent_app      9  3.07     1  unknown  -\n     2  <DATE> 16:43  agent_app      9  3.07     1  unknown  -\n     3  <DATE> 16:43  agent_app     18  3.07     4  unknown  -\n     4  <DATE> 16:44  agent_app     18  2.10     0  unknown  -\n     5  <DATE> 16:45  agent_app     18  2.10     4  unknown  -\n     6  <DATE> 16:45  agent_app     18  2.10     4  unknown  -\n     7  <DATE> 16:56  agent_app     17  2.16     4  unknown  -\n     8  <DATE> 16:56  agent_app     18  2.96     5  unknown  -\n     9  <DATE> 17:02  agent_app     18  2.84     5  unknown  -\n    10  <DATE> 17:23  agent_app     18  2.84     5  unknown  -\n    11  <DATE> 17:25  agent_app     18  2.84     5  unknown  -\n    12  <DATE> 17:30  agent_app     18  2.84     5  unknown  -\n    13  <DATE> 17:32  agent_app     18  2.84     5  unknown  -\n    14  <DATE> 17:51  agent_app     18  2.84     5  unknown  -\n    15  <DATE> 18:46  agent_app     18  2.84     5  unknown  -\n    16  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    17  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    18  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    19  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    20  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    21  <DATE> 18:52  agent_app     18  2.84     5  unknown  -\n    22  <DATE> 18:53  agent_app     18  2.84     5  unknown  -\n    23  <DATE> 18:56  agent_app     18  2.84     5  unknown  -\n    24  <DATE> 18:56  agent_app     18  2.84     5  unknown  -\n    25  <DATE> 18:56  agent_app     18  2.84     5  unknown  -\n    26  <DATE> 19:01  agent_app     18  2.84     5  unknown  -\n    27  <DATE> 19:01  agent_app     18  2.84     5  unknown  -\n    28  <DATE> 19:01  agent_app     18  2.84     5  unknown  -\n    29  <DATE> 19:01  agent_app     18  2.84     5  unknown  -\n    30  <DATE> 19:04  agent_app     18  2.84     5  unknown  -\n    31  <DATE> 19:04  agent_app     18  2.84     5  unknown  -\n    32  <DATE> 19:05  agent_app     18  2.84     5  unknown  -\n    33  <DATE> 19:05  agent_app     18  2.84     5  unknown  -\n    34  <DATE> 19:09  agent_app     18  2.84     5  unknown  -\n    35  <DATE> 19:10  agent_app     18  2.84     5  unknown  指标意识、tradeoff\n    36  <DATE> 19:14  agent_app     18  2.84     5  unknown  tradeoff、系统视角\n    37  <DATE> 19:14  agent_app     18  2.60     5  unknown  tradeoff、系统视角\n    38  <DATE> 19:18  agent_app     15  3.00     5  unknown  -\n    39  <DATE> 19:21  agent_app     15  3.00     5  unknown  -\n    40  <DATE> 19:24  agent_app     15  3.00     5  unknown  -\n    41  <DATE> 19:28  agent_app      9  3.00     2  unknown  -\n    42  <DATE> 19:32  agent_app     13  3.00     4  unknown  -\n    43  <DATE> 19:36  agent_app     13  3.00     4  unknown  -\n    44  <DATE> 19:44  agent_app     13  2.02     2  unknown  基础概念、指标意识\n    45  <DATE> 19:46  agent_app     12  1.98     2  unknown  基础概念、指标意识\n    46  <DATE> 19:50  agent_app      8  2.95     1  unknown  tradeoff、系统视角\n    47  <DATE> 19:50  agent_app      8  1.82     0  unknown  基础概念、项目 ownership\n    48  <DATE> 19:52  agent_app     10  1.80     0  real   基础概念、项目 ownership\n    49  <DATE> 19:53  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    50  <DATE> 19:54  agent_app      8  1.93     1  real   基础概念、项目 ownership\n    51  <DATE> 19:55  agent_app      8  2.17     1  real   项目 ownership、tradeoff\n    52  <DATE> 20:20  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    53  <DATE> 20:20  agent_app      9  3.00     2  mock   tradeoff、系统视角\n    54  <DATE> 20:21  agent_app     10  2.04     0  real   基础概念、项目 ownership\n    55  <DATE> 20:24  agent_app     15  1.73     5  real   基础概念、指标意识\n    56  <DATE> 20:37  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    57  <DATE> 20:37  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    58  <DATE> 20:38  agent_app     18  2.84     5  mock   tradeoff、系统视角\n    59  <DATE> 20:39  agent_app     17  1.72     5  real   基础概念、指标意识\n    60  <DATE> 14:18  agent_app     11  2.98     3  mock   tradeoff、系统视角\n    61  <DATE> 14:23  ai_algo       17  1.60     5  mock   基础概念、项目 ownership\n    62  <DATE> 15:12  agent_app     18  2.84     5  mock   指标意识、tradeoff\n    63  <DATE> 15:22  agent_app     18  2.84     5  mock   指标意识、tradeoff\n    64  <DATE> 15:22  agent_app     18  2.84     5  mock   指标意识、tradeoff\n    65  <DATE> 15:23  agent_app      9  2.04     2  real   基础概念、指标意识\n    66  <DATE> 16:02  agent_app      9  3.00     2  mock   指标意识、tradeoff\n    67  <DATE> 16:24  agent_app     13  2.97     4  mock   指标意识、tradeoff\n    68  <DATE> 16:40  agent_app      9  3.00     2  mock   指标意识、tradeoff\n    69  <DATE> 16:41  agent_app     13  2.97     4  mock   指标意识、tradeoff\n    70  <DATE> 16:42  agent_app     11  2.98     3  mock   指标意识、tradeoff\n    71  <DATE> 17:38  agent_app     11  2.98     3  mock   指标意识、tradeoff\n    72  <DATE> 17:38  agent_app     11  2.98     3  mock   指标意识、tradeoff\n    73  <DATE> 17:45  ai_algo        1  2.60     0  mock   tradeoff、系统视角\n    74  <DATE> 17:46  ai_algo        1  2.60     0  mock   tradeoff、系统视角\n    75  <DATE> 17:46  agent_app      8  2.95     1  mock   指标意识、tradeoff\n    76  <DATE> 17:46  agent_app      8  2.95     1  mock   指标意识、tradeoff\n    77  <DATE> 17:47  agent_app      8  2.95     1  mock   指标意识、tradeoff\n    78  <DATE> 11:42  ai_algo        1  2.60     0  mock   tradeoff、系统视角\n    79  <DATE> 11:43  ai_algo        1  2.60     0  mock   tradeoff、系统视角\n    80                                   0  0.00     0  unknown  -\n    81                                   0  0.00     0  unknown  -\n\n  真实模型场次：7 / 81（mock 与旧记录不参与趋势）\n  最近两场均分：1.72 → 2.04  ↑ +0.32\n  最深卡点：5 → 2 层\n\n  反复出现的短板（≥2 场）：\n    - 项目 ownership：7 场\n    - tradeoff：7 场\n    - 系统视角：7 场\n    - 基础概念：6 场\n    - 业务视角：4 场\n    - 指标意识：3 场\n\n  说明：单场样本量小，趋势只反映『最近两场』，不构成能力结论。"
+    }
+  },
+  "trend": {
+    "status": 200,
+    "body": {
+      "avg_series": [
+        0.0,
+        0.0,
+        0.0,
+        2.4,
+        2.4,
+        2.4,
+        2.6,
+        0.0,
+        0.0,
+        0.0,
+        2.6,
+        2.6
+      ],
+      "count": 12,
+      "dim_avg": {
+        "accuracy": 3.0,
+        "boundary": 2.0,
+        "clarity": 4.0,
+        "depth": 1.75,
+        "tradeoff": 2.0
+      },
+      "points": [
+        {
+          "at": "<TIME>",
+          "avg": 0.0,
+          "dims": {},
+          "role": "ai_algo",
+          "sid": "aud_20261124_142455_c918",
+          "turns": 0,
+          "user": "dkuser2"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 0.0,
+          "dims": {},
+          "role": "ai_algo",
+          "sid": "aud_20261124_142506_ff78",
+          "turns": 0,
+          "user": "dkuser3"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 0.0,
+          "dims": {},
+          "role": "backend",
+          "sid": "aud_20261124_190137_601c",
+          "turns": 0,
+          "user": "bob"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 2.4,
+          "dims": {},
+          "role": "ai_algo",
+          "sid": "aud_20261124_190206_0889",
+          "turns": 1,
+          "user": "carol"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 2.4,
+          "dims": {},
+          "role": "ai_algo",
+          "sid": "aud_20261124_190247_804c",
+          "turns": 1,
+          "user": "dave"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 2.4,
+          "dims": {
+            "accuracy": 3.0,
+            "boundary": 2.0,
+            "clarity": 4.0,
+            "depth": 1.0,
+            "tradeoff": 2.0
+          },
+          "role": "ai_algo",
+          "sid": "aud_20261124_210952_7842",
+          "turns": 1,
+          "user": "eve"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 2.6,
+          "dims": {
+            "accuracy": 3.0,
+            "boundary": 2.0,
+            "clarity": 4.0,
+            "depth": 2.0,
+            "tradeoff": 2.0
+          },
+          "role": "ai_algo",
+          "sid": "aud_20261124_211417_07e1",
+          "turns": 1,
+          "user": "demo"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 0.0,
+          "dims": {},
+          "role": "ai_algo",
+          "sid": "aud_20261124_213430_1a18",
+          "turns": 0,
+          "user": "zhangsan"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 0.0,
+          "dims": {},
+          "role": "ai_algo",
+          "sid": "aud_20261124_214111_82a6",
+          "turns": 0,
+          "user": "local"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 0.0,
+          "dims": {},
+          "role": "ai_algo",
+          "sid": "aud_20261124_214129_760a",
+          "turns": 0,
+          "user": "local"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 2.6,
+          "dims": {
+            "accuracy": 3.0,
+            "boundary": 2.0,
+            "clarity": 4.0,
+            "depth": 2.0,
+            "tradeoff": 2.0
+          },
+          "role": "ai_algo",
+          "sid": "aud_20261126_114252_972c",
+          "turns": 1,
+          "user": "local"
+        },
+        {
+          "at": "<TIME>",
+          "avg": 2.6,
+          "dims": {
+            "accuracy": 3.0,
+            "boundary": 2.0,
+            "clarity": 4.0,
+            "depth": 2.0,
+            "tradeoff": 2.0
+          },
+          "role": "ai_algo",
+          "sid": "aud_20261126_114329_cdbd",
+          "turns": 1,
+          "user": "local"
+        }
+      ],
+      "user": "all"
+    }
+  },
+  "sessions": {
+    "status": 200,
+    "body": {
+      "sessions": [
+        {
+          "avg_score": 2.6,
+          "created_at": "<TIME>",
+          "finish_reason": "user_quit",
+          "phase": "FEEDBACK",
+          "role": "ai_algo",
+          "sid": "aud_20261126_114329_cdbd",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 2.6,
+          "created_at": "<TIME>",
+          "finish_reason": "user_quit",
+          "phase": "FEEDBACK",
+          "role": "ai_algo",
+          "sid": "aud_20261126_114252_972c",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_214129_760a",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_214111_82a6",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_213430_1a18",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "zhangsan"
+        },
+        {
+          "avg_score": 2.6,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_211417_07e1",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "demo"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_210952_7842",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "eve"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_190247_804c",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "dave"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_190206_0889",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "carol"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "backend",
+          "sid": "aud_20261124_190137_601c",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "bob"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_142506_ff78",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "dkuser3"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_142455_c918",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "dkuser2"
+        }
+      ]
+    }
+  },
+  "users": {
+    "status": 200,
+    "body": {
+      "users": [
+        {
+          "created_at": "<TIME>",
+          "last_login": "<TIME>",
+          "role": "admin",
+          "user": "snap_user"
+        }
+      ]
+    }
+  },
+  "admin": {
+    "status": 200,
+    "body": {
+      "sessions": [
+        {
+          "avg_score": 2.6,
+          "created_at": "<TIME>",
+          "finish_reason": "user_quit",
+          "phase": "FEEDBACK",
+          "role": "ai_algo",
+          "sid": "aud_20261126_114329_cdbd",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 2.6,
+          "created_at": "<TIME>",
+          "finish_reason": "user_quit",
+          "phase": "FEEDBACK",
+          "role": "ai_algo",
+          "sid": "aud_20261126_114252_972c",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_214129_760a",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_214111_82a6",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_213430_1a18",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "zhangsan"
+        },
+        {
+          "avg_score": 2.6,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_211417_07e1",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "demo"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_210952_7842",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "eve"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_190247_804c",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "dave"
+        },
+        {
+          "avg_score": 2.4,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "SELF_INTRO",
+          "role": "ai_algo",
+          "sid": "aud_20261124_190206_0889",
+          "turns": 1,
+          "updated_at": "<TIME>",
+          "user": "carol"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "backend",
+          "sid": "aud_20261124_190137_601c",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "bob"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_142506_ff78",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "dkuser3"
+        },
+        {
+          "avg_score": 0.0,
+          "created_at": "<TIME>",
+          "finish_reason": "",
+          "phase": "OPENING",
+          "role": "ai_algo",
+          "sid": "aud_20261124_142455_c918",
+          "turns": 0,
+          "updated_at": "<TIME>",
+          "user": "dkuser2"
+        }
+      ],
+      "users": [
+        {
+          "avg_score": 1.3,
+          "last_at": "<TIME>",
+          "sessions": 4,
+          "turns": 2,
+          "user": "local"
+        },
+        {
+          "avg_score": 0.0,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 0,
+          "user": "zhangsan"
+        },
+        {
+          "avg_score": 2.4,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 1,
+          "user": "eve"
+        },
+        {
+          "avg_score": 0.0,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 0,
+          "user": "dkuser3"
+        },
+        {
+          "avg_score": 0.0,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 0,
+          "user": "dkuser2"
+        },
+        {
+          "avg_score": 2.6,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 1,
+          "user": "demo"
+        },
+        {
+          "avg_score": 2.4,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 1,
+          "user": "dave"
+        },
+        {
+          "avg_score": 2.4,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 1,
+          "user": "carol"
+        },
+        {
+          "avg_score": 0.0,
+          "last_at": "<TIME>",
+          "sessions": 1,
+          "turns": 0,
+          "user": "bob"
+        }
+      ]
+    }
+  },
+  "start_bad_role": {
+    "status": 500,
+    "body": {
+      "error": "LLMError: 既没有本地模型，也没有 LLM_API_KEY。"
+    }
+  },
+  "answer_no_sid": {
+    "status": 200,
+    "body": {
+      "error": "会话不存在（服务重启或已过期），请重新开始"
+    }
+  },
+  "answer_empty": {
+    "status": 200,
+    "body": {
+      "error": "回答为空"
+    }
+  },
+  "notfound": {
+    "status": null,
+    "body": "UnicodeEncodeError: 'ascii' codec can't encode characters in position 9-11: ordinal not in range(128)"
+  },
+  "logout": {
+    "status": 200,
+    "body": {
+      "ok": true
+    }
+  }
+}
