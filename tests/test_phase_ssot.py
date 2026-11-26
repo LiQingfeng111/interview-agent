@@ -77,11 +77,42 @@ class TestPhaseSSOT(unittest.TestCase):
                         "总轮次变多时深挖预算应变大")
 
     def test_frontend_phase_labels_present(self):
-        """前端不硬编码阶段名（它用后端给的 desc），但要确认它没引入第二套真相。"""
-        src = open(os.path.join(ROOT, "webui.py"), encoding="utf-8").read()
-        hard = [p for p in config.PHASE_CONFIG
-                if f'"{p}"' in src or f"'{p}'" in src]
-        self.assertEqual(hard, [], f"webui.py 里出现硬编码阶段名：{hard}（应只用后端 desc）")
+        """前端不硬编码阶段名（它用后端给的 desc），确认它没引入第二套真相。
+
+        历史：这条测试原来检查 `webui.py`（旧单体前端）。
+        旧架构已归档到 legacy/，现在检查新的 Vue 前端。
+
+        检查逻辑不变，只是目标换了：扫所有 .vue/.ts 源文件，
+        如果出现 `config.PHASE_CONFIG` 里的阶段名（如 "PROJECT_PROBE"），
+        说明前端自己维护了一套阶段真相——那就会和后端不同步。
+        """
+        src_dir = os.path.join(ROOT, "frontend", "src")
+        if not os.path.isdir(src_dir):
+            self.skipTest("前端源码不存在（只跑后端时跳过）")
+
+        offenders = []
+        for root, _dirs, files in os.walk(src_dir):
+            for name in files:
+                if not name.endswith((".vue", ".ts")):
+                    continue
+                # 测试文件要排除：里面的 fixture 本来就得写死阶段名，
+                # 那是"构造测试数据"，不是"维护第二套真相"。
+                if ".test." in name or ".spec." in name:
+                    continue
+                path = os.path.join(root, name)
+                try:
+                    src = open(path, encoding="utf-8").read()
+                except OSError:
+                    continue
+                for phase in config.PHASE_CONFIG:
+                    if f'"{phase}"' in src or f"'{phase}'" in src:
+                        rel = os.path.relpath(path, ROOT)
+                        offenders.append(f"{rel}: {phase}")
+
+        self.assertEqual(
+            offenders, [],
+            f"前端出现硬编码阶段名（应只用后端返回的 phase desc）：{offenders}",
+        )
 
 
 if __name__ == "__main__":
