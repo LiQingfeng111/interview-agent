@@ -54,9 +54,18 @@ async function main() {
     })
     const page = await ctx.newPage()
 
-    await page.goto(URL, { waitUntil: 'networkidle', timeout: 60000 })
-    // GitHub 的 README 是异步注入的，等它渲染完
-    await page.waitForTimeout(3000)
+    // `networkidle` 在 GitHub 上会超时：页面有长轮询和埋点请求，
+    // 永远不会"网络空闲"。改成 domcontentloaded + 显式等元素。
+    await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 90000 })
+
+    // 等 README 真正渲染出来（GitHub 是异步注入的）
+    try {
+      await page.waitForSelector('article.markdown-body', { timeout: 30000 })
+      log('README 区域已出现')
+    } catch {
+      log('! 等不到 README 区域，可能需要登录或页面结构变了')
+    }
+    await page.waitForTimeout(2000)
 
     // 等图片加载完（README 里 8 张图）
     await page.evaluate(async () => {

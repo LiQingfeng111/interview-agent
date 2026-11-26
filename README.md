@@ -95,7 +95,7 @@ refresh 7 天在 HttpOnly Cookie（JS 读不到）。
 
 响应式布局，未做专门适配但可用。
 
-<img src="docs/images/08-mobile-login.png" alt="移动端登录页" width="240">
+<img src="docs/images/08-mobile-login.png" alt="移动端登录页" width="220">
 
 </td>
 </tr>
