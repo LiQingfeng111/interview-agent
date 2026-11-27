@@ -465,9 +465,16 @@ def _report_from_turns(turns: list[dict]) -> dict[str, Any]:
         if phase:
             lines.append(f"阶段：{phase}")
         if q:
-            lines.append(f"**问**：{q[:200]}")
+            # 用 _smart_truncate 而不是 q[:200]
+            #
+            # 硬切会把句子切在半截：
+            #   "…最后留时间给你反问。不确定的可以直接说不确定。"
+            #   切在第 200 字 → "…最后留时间给你反问。不"
+            # 报告是要给人读的，半句话比少说一句更糟。
+            lines.append(f"**问**：{_smart_truncate(q, 200)}")
         if a:
-            lines.append(f"**答**：{a[:300]}")
+            # 回答给更大额度（300），因为那才是要评估的内容
+            lines.append(f"**答**：{_smart_truncate(a, 300)}")
         lines.append("")
 
         # dims 存在 turns 表里没有单独列，从 score 反推不了维度；

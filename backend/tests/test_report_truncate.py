@@ -166,3 +166,76 @@ def test_highlight_uses_markdown_list():
     # 加粗标题 + 列表项
     assert out.startswith("**答得最好的**")
     assert "\n- 问：" in out
+
+
+# ============================================================================
+# 逐轮记录：也要按句子边界截断
+# ============================================================================
+
+def test_round_by_round_uses_smart_truncate():
+    """逐轮记录里的问答不能硬切。
+
+    原来这里是 `q[:200]` / `a[:300]`，同一个 bug ——
+    长问题会在第 200 个字被切断，读者看到半句话。
+
+    这个测试用"正好会被切在半句"的文本验证。
+    """
+    from app.core.service import _report_from_turns
+
+    long_q = (
+        "你好，我是本次面试官。流程四步：先请你简单自我介绍，然后针对简历里的项目做深挖，"
+        "接着几个技术问题，最后留时间给你反问。不确定的可以直接说不确定，说错了也没关系。"
+    )
+    long_a = (
+        "我做过一个检索增强生成的项目。" * 40   # 远超 300 字
+    )
+
+    turns = [{
+        "question": long_q,
+        "answer": long_a,
+        "verdict": "partial",
+        "score": 2.0,
+        "phase": "OPENING",
+        "dims": {},
+    }]
+
+    r = _report_from_turns(turns)
+    md = r["markdown"]
+
+    # 找到逐轮记录里的那一轮
+    assert "**问**：" in md
+    assert "**答**：" in md
+
+    # 问题：截断点必须在句末标点或带省略号
+    q_line = next(l for l in md.split("\n") if l.startswith("**问**："))
+    q_text = q_line.replace("**问**：", "").strip()
+    assert q_text.endswith(("。", "！", "？", "；", "，", "…")), (
+        f"问题被切在半句：{q_text[-15:]!r}"
+    )
+
+    # 回答：同样
+    a_line = next(l for l in md.split("\n") if l.startswith("**答**："))
+    a_text = a_line.replace("**答**：", "").strip()
+    assert a_text.endswith(("。", "！", "？", "；", "，", "…")), (
+        f"回答被切在半句：{a_text[-15:]!r}"
+    )
+
+
+def test_short_round_not_truncated():
+    """短问答原样保留，不加省略号。"""
+    from app.core.service import _report_from_turns
+
+    turns = [{
+        "question": "请做自我介绍",
+        "answer": "我叫张三，三年后端经验。",
+        "verdict": "pass",
+        "score": 3.5,
+        "phase": "SELF_INTRO",
+        "dims": {},
+    }]
+    md = _report_from_turns(turns)["markdown"]
+
+    assert "请做自我介绍" in md
+    assert "我叫张三，三年后端经验。" in md
+    assert "…" not in md
+
