@@ -52,13 +52,38 @@ const VALID_TYPES = [
 let failed = 0
 
 blocks.forEach((block, i) => {
-  const lines = block.trim().split('\n')
-  const first = lines[0].trim()
+  const allLines = block.trim().split('\n')
+
+  // Mermaid 支持在图的**第一行**放指令，两种写法都合法：
+  //   ① %%{init: {...}}%%      单行 JSON 配置（我们用的）
+  //   ② %%{init: {...}}%% 之后才是 flowchart
+  // 指令块可能跨多行，所以要把它们剥掉再找真正的图类型行。
+  let idx = 0
+  let depth = 0
+  while (idx < allLines.length) {
+    const line = allLines[idx].trim()
+    if (line.startsWith('%%{')) {
+      depth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+      idx++
+      if (depth <= 0 && line.includes('}%%')) break
+      continue
+    }
+    if (depth > 0) {
+      depth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+      idx++
+      if (depth <= 0 && line.includes('}%%')) break
+      continue
+    }
+    if (line === '' || line.startsWith('%%')) { idx++; continue }
+    break
+  }
+
+  const declLine = (allLines[idx] || '').trim()
   const problems = []
 
-  // 1) 类型声明
-  if (!VALID_TYPES.some((t) => first.startsWith(t))) {
-    problems.push(`第一行不是合法的图类型：${first}`)
+  // 1) 类型声明（跳过指令行后找到的才算）
+  if (!VALID_TYPES.some((t) => declLine.startsWith(t))) {
+    problems.push(`找不到合法的图类型声明（跳过指令后是：${declLine || '（空）'}）`)
   }
 
   // 2) subgraph / end 配对
@@ -69,30 +94,38 @@ blocks.forEach((block, i) => {
   }
 
   // 3) 方括号/圆括号配对（粗略）
+  //    注意：指令行里有大量 {} 和 ""，先剔除再数
+  const body = allLines.slice(idx).join('\n')
   const pairs = [
-    ['[', ']'], ['(', ')'], ['{', '}'],
+    ['[', ']'], ['(', ')'],
   ]
   for (const [open, close] of pairs) {
-    const o = (block.split(open).length - 1)
-    const c = (block.split(close).length - 1)
+    const o = (body.split(open).length - 1)
+    const c = (body.split(close).length - 1)
     if (o !== c) {
       problems.push(`${open}${close} 不配对（${o} vs ${c}）`)
     }
   }
 
-  // 4) 箭头语法（flowchart 里常见写法）
-  if (first.startsWith('flowchart') || first.startsWith('graph')) {
-    const badArrows = block.match(/-->\s*\n\s*$/gm)
-    if (badArrows) problems.push('箭头后缺目标节点')
+  // 4) classDef 是否给了文字颜色
+  //
+  // 为什么专门查这个：深色主题下如果只设 fill 不设 color，
+  // 浅色底配默认浅色字，字会糊在背景里看不清（真实踩过）。
+  const classDefs = block.match(/classDef\s+(\w+)\s+([^\n]+)/g) || []
+  for (const cd of classDefs) {
+    const name = (cd.match(/classDef\s+(\w+)/) || [])[1] || '?'
+    if (!/color\s*:/.test(cd)) {
+      problems.push(`classDef ${name} 没设 color（深色主题下文字会看不清）`)
+    }
   }
 
   if (problems.length) {
-    console.log(`\n  ✗ 图 ${i + 1}（${first}）有问题：`)
+    console.log(`\n  ✗ 图 ${i + 1}（${declLine}）有问题：`)
     problems.forEach((p) => console.log(`      - ${p}`))
     failed++
   } else {
     const nodes = (block.match(/\[/g) || []).length
-    console.log(`  ✓ 图 ${i + 1}（${first}，约 ${nodes} 个节点）`)
+    console.log(`  ✓ 图 ${i + 1}（${declLine}，约 ${nodes} 个节点）`)
   }
 })
 

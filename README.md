@@ -146,14 +146,28 @@ refresh 7 天在 HttpOnly Cookie（JS 读不到）。
 > 下面还有 Mermaid 版本（GitHub 上会渲染成可交互的图）。
 
 ```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "background": "#ffffff",
+    "primaryColor": "#eef2f8",
+    "primaryTextColor": "#1a2332",
+    "primaryBorderColor": "#94a3b8",
+    "lineColor": "#64748b",
+    "textColor": "#1a2332",
+    "fontSize": "14px"
+  }
+}}%%
 flowchart TB
     subgraph Client["前端 · Vue 3 + TypeScript"]
+        direction LR
         UI["面试页<br/>简历上传 / 对话 / 实时评分"]
         Report["报告页<br/>五维雷达 + 逐轮记录"]
         Speech["语音<br/>浏览器原生 ASR/TTS"]
     end
 
     subgraph API["后端 · FastAPI（31 个端点）"]
+        direction LR
         Auth["鉴权<br/>JWT 双 token"]
         Sess["会话<br/>/sessions"]
         Doc["文档<br/>/documents"]
@@ -170,60 +184,72 @@ flowchart TB
     end
 
     subgraph Rules["确定性规则层（不 import 任何模型）"]
+        direction LR
         SM["state_machine<br/>阶段 + 预算"]
         PT["probe_tree<br/>五要素追问树"]
         INV["invariants<br/>8 条运行时约束"]
-        LG["ledger<br/>追加式账本 + 哈希链"]
+        LG["ledger<br/>追加式账本"]
         EV["evaluator<br/>五维评分"]
-        RB["rubric<br/>逻辑分（规则侧）"]
+        RB["rubric<br/>逻辑分"]
     end
 
     subgraph Model["模型层（可换）"]
-        LLM["LangChain<br/>OpenAI 兼容接口"]
+        direction LR
+        LLM["LangChain<br/>OpenAI 兼容"]
         Embed["bge-m3<br/>1024 维向量"]
     end
 
     subgraph Store["存储"]
-        PG[("PostgreSQL<br/>+ pgvector<br/>10 张表")]
+        direction LR
+        PG[("PostgreSQL<br/>pgvector · 10 表")]
         RD[("Redis<br/>会话热态")]
         CKPT["PostgresSaver<br/>图状态快照"]
     end
 
-    UI -->|"HTTP / SSE"| Auth
+    UI --> Auth
     UI --> Sess
     UI --> Doc
     UI --> SSE
     Report --> Sess
-    Speech -.->|"可选"| API
+    Speech -.->|可选| API
 
     Auth --> PG
-    Doc -->|"切片 + 向量化"| Embed
+    Doc -->|切片 + 向量化| Embed
     Embed --> PG
     SSE --> Graph
-
     Sess --> Graph
-    Graph --> Rules
-    Graph --> Model
-    Graph --> CKPT
 
     Plan --> Probe
     Probe -->|"出题：等候选人回答"| Eval
     Eval --> Route
-    Route -->|"未到轮次上限<br/>且未收敛"| Probe
+    Route -->|"未到上限<br/>且未收敛"| Probe
     Route -->|"结束"| Rep
 
-    SM --> PG
-    LG --> PG
+    SM -.->|读写| PG
+    LG -.->|审计| PG
+    Graph --> CKPT
 
     LLM -.->|"措辞"| Probe
     LLM -.->|"五项打分"| Eval
+    Graph --> Rules
+    Graph --> Model
 
-    classDef model fill:#fff4e6,stroke:#f59e0b,stroke-width:2px
-    classDef rules fill:#e8f5e9,stroke:#22c55e,stroke-width:2px
-    classDef store fill:#e3f2fd,stroke:#3b82f6,stroke-width:1px
+    %% 淡化底层的次要连线（存储/快照），让主链路（出题→评分→推进）更突出
+    linkStyle default stroke:#94a3b8,stroke-width:1.2px
+
+    classDef model fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f
+    classDef rules fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
+    classDef store fill:#dbeafe,stroke:#2563eb,stroke-width:1px,color:#1e3a8a
+    classDef client fill:#f1f5f9,stroke:#64748b,stroke-width:1px,color:#0f172a
+    classDef api fill:#ede9fe,stroke:#7c3aed,stroke-width:1px,color:#3b0764
+    classDef orch fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#7c2d12
+
     class LLM,Embed model
     class SM,PT,INV,LG,EV,RB rules
     class PG,RD,CKPT store
+    class UI,Report,Speech client
+    class Auth,Sess,Doc,SSE api
+    class Plan,Probe,Eval,Route,Rep orch
 ```
 
 **看图要点**：
