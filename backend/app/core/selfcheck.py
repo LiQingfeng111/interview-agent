@@ -100,14 +100,15 @@ def check_bank() -> list[str]:
 
     ## 为什么要在启动时自动导入
 
-    Docker 部署时是全新数据库，`bank_questions` 表是空的。
-    不自动导入的话，技术问答阶段题库选题永远返回空 →
-    面试只能靠模型自由出题，质量明显下降。
+    题库是面试出题的基础。容器化部署时是全新数据库，
+    `bank_questions` 表是空的 —— 不自动导入的话，
+    技术问答阶段题库选题永远返回空，面试只能靠模型自由出题，
+    质量明显下降。
 
-    导入本身幂等（`ON CONFLICT DO UPDATE`），且向量化断点续跑
-    （只处理 `embedding IS NULL` 的题），所以重复执行安全。
+    导入本身幂等（`ON CONFLICT DO UPDATE`），向量化也是断点续跑
+    （只处理 `embedding IS NULL` 的题），重复执行安全。
 
-    注意：只在"表为空"时才导入，避免每次启动都扫一遍题库文件。
+    注意：只在"表为空"或"向量不全"时才处理，避免每次启动都扫题库。
     """
     problems: list[str] = []
     try:
@@ -250,6 +251,36 @@ def check_database() -> list[str]:
     return problems
 
 
+def check_demo_user() -> list[str]:
+    """确保默认演示账号存在。
+
+    ## 为什么账号也要"启动时保证"
+
+    用户反馈"账号密码都对却登不进去"，根因是数据库卷被删，
+    注册的账号跟着没了。
+
+    备份是"事后补救"，更根本的做法是**把账号写进代码**：
+    只要代码在，账号就在。新人 clone 下来起服务就能登录，
+    不用先注册、也不会因为我重置数据库而丢失。
+
+    实现见 `app/core/bootstrap.py`，语义是幂等的：
+    账号已存在就什么都不做（不重置密码）。
+    """
+    problems: list[str] = []
+    try:
+        from app.core import bootstrap
+
+        r = bootstrap.ensure_demo_user()
+        if r.get("created"):
+            log.info("默认账号已创建：%s", r.get("user"))
+        elif r.get("skipped"):
+            log.info("默认账号未处理：%s（%s）", r.get("user"), r.get("skipped"))
+    except Exception as e:  # noqa: BLE001
+        # 建不成账号不该阻止启动 —— 用户还能自己注册
+        log.warning("默认账号检查失败：%s", e)
+    return problems
+
+
 def run(strict: bool = True) -> dict[str, Any]:
     """跑全部检查。
 
@@ -260,6 +291,9 @@ def run(strict: bool = True) -> dict[str, Any]:
     import_problems = check_imports()
     db_problems = check_database()
     bank_problems = check_bank()
+
+    # 默认账号：不阻塞启动（失败也算不上"问题"），只保证它在
+    check_demo_user()
 
     ok = not import_problems and not db_problems
 
