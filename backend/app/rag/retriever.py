@@ -176,47 +176,82 @@ def _search_doc(query: str, owner: str, kind: str, k: int, index: str,
 
 def search_bank(query: str, k: int = 10, role: str = "",
                 threshold: float | None = None,
-                use: str = "select") -> list[Hit]:
+                use: str = "select",
+                topic: str = "") -> list[Hit]:
     """题库语义检索。
 
     Args:
         use: 用途决定阈值——
              "dedup"  判是否同一考点（严，0.60）
              "select" 找相关题（宽，0.42）
+        topic: 指定话题时**先做精确过滤**（见下面 why）
 
-    为什么必须分用途：实测同一语义换个说法，相似度从 0.854 掉到 0.420。
+    ## 为什么需要 topic 过滤（实测数据）
+
+    生产环境的查询是状态机给的话题名（如 "RAG"），但标为 `topic='RAG'`
+    的题目，问的是：
+
+        "chunk 大小和切分策略你会怎么定？"
+        "多路召回后用 RRF 融合，k 取 60 是默认还是有调过？"
+        "文档更新后旧 chunk 还留在向量库里，增量索引怎么保证不重复？"
+
+    **这些题文本里没有 "RAG" 这个词。** 实测统计：
+
+        topic='RAG'           question 含 "RAG"     2/8  = 25%
+        topic='Transformer'   question 含 "Transformer"  1/5  = 20%
+        topic='Agent'         question 含 "Agent"   8/8  = 100%
+        topic='评测'          question 含 "评测"     6/7  = 86%
+
+    用 "RAG" 做向量检索去匹配 question 文本，命中率必然只有 20-25%。
+    **这不是 embedding 模型的问题，是检索方式用错了。**
+
+    题库里明明有 `topic` 字段，却只拿它做「话题配额加权」，
+    没用来做「精确过滤」。这是设计缺陷。
+
+    加上过滤后：给定 topic，直接在该话题内检索，
+    命中率 100%（因为不匹配的都排除了）。
+
+    为什么不能**只**过滤：话题内的题还需要按语义排序
+    （候选人的上下文决定问哪道更合适），所以过滤 + 向量排序一起用。
+
+  为什么必须分用途（use）：实测同一语义换个说法，相似度从 0.854 掉到 0.420。
     用 0.55 一刀切，会出现"去重时漏判重复"和"选题时全部过滤掉"两种相反的错误。
     """
-    if not query.strip():
+    if not query.strip() and not topic:
         return []
 
     th = threshold if threshold is not None else threshold_for_use(use, "bank")
     emb = get_embedder()
+
+    # 查询向量：纯 topic 查询时用 topic 本身，否则用 query
+    qtext = query if query.strip() else topic
     try:
-        qvec = emb.embed([query])[0]
+        qvec = emb.embed([qtext])[0]
     except Exception as e:  # noqa: BLE001
         log.warning("题库检索向量化失败：%s", e)
         return []
 
     vec = _vec_literal(qvec)
+
+    # 动态拼 WHERE：role / topic 都可能存在
+    conds = ["embedding IS NOT NULL"]
+    params: list = [vec]
     if role:
-        sql = """
-            SELECT qid, question, topic, points, 1 - (embedding <=> %s::vector) AS sim
-            FROM bank_questions
-            WHERE embedding IS NOT NULL AND role = %s
-            ORDER BY embedding <=> %s::vector
-            LIMIT %s
-        """
-        params: tuple = (vec, role, vec, k)
-    else:
-        sql = """
-            SELECT qid, question, topic, points, 1 - (embedding <=> %s::vector) AS sim
-            FROM bank_questions
-            WHERE embedding IS NOT NULL
-            ORDER BY embedding <=> %s::vector
-            LIMIT %s
-        """
-        params = (vec, vec, k)
+        conds.append("role = %s")
+        params.append(role)
+    if topic:
+        conds.append("topic = %s")
+        params.append(topic)
+    params.append(vec)
+    params.append(k)
+
+    sql = f"""
+        SELECT qid, question, topic, points, 1 - (embedding <=> %s::vector) AS sim
+        FROM bank_questions
+        WHERE {' AND '.join(conds)}
+        ORDER BY embedding <=> %s::vector
+        LIMIT %s
+    """
 
     hits: list[Hit] = []
     try:

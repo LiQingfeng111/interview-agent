@@ -1,0 +1,153 @@
+{
+  "corpus": 740,
+  "method": "fine-grained embedding rerank (zero download)",
+  "baseline_hits": 9,
+  "rerank_hits": 9,
+  "delta": 0,
+  "detail": [
+    {
+      "kind": "A",
+      "query": "召回从71%提到82%",
+      "target": "召回率从 71% 提升到 82%，在 200 条标注集上测的",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "召回率从 71% 提升到 82%，在 200 条标注集上测的"
+    },
+    {
+      "kind": "A",
+      "query": "top20 重排的延迟",
+      "target": "重排只在 top20 上做，P99 延迟 1.8 秒",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "重排只在 top20 上做，P99 延迟 1.8 秒"
+    },
+    {
+      "kind": "A",
+      "query": "d_k = 64 是怎么算的",
+      "target": "每个头 d_k = d_v = d_model / h = 512/8 = 64",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "你手写多头注意力时，为什么要除以 √d_k？如果 d_k=64，这个缩放因子具体是多少，换成 d_k"
+    },
+    {
+      "kind": "A",
+      "query": "P99 超过 2.5 秒降级",
+      "target": "监控 P99，超过 2.5 秒自动降级成纯向量召回",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "监控 P99，超过 2.5 秒自动降级成纯向量召回"
+    },
+    {
+      "kind": "A",
+      "query": "chunk size 512",
+      "target": "切块大小从 500 调到 512，索引体积涨 30%",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "chunk 切成 500 字、overlap 设 50 是怎么定的？如果换成一份全是表格的财报，你还"
+    },
+    {
+      "kind": "A",
+      "query": "HNSW 的 M 参数",
+      "target": "HNSW 索引参数 M 取 16，ef_construction 取 200",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "HNSW 索引参数 M 取 16，ef_construction 取 200"
+    },
+    {
+      "kind": "B",
+      "query": "缓存击穿怎么处理",
+      "target": "Redis 缓存穿透的解决方案与区别",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "什么是缓存击穿？它和缓存雪崩、缓存穿透分别有什么区别？"
+    },
+    {
+      "kind": "B",
+      "query": "你的 baseline 是什么",
+      "target": "改造前的指标是多少，和现在怎么比",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "讲一次你在两周内从零上手一个陌生技术栈并交付东西的经历：交付物是什么形态（脚本 / PR / 上线接"
+    },
+    {
+      "kind": "B",
+      "query": "这个东西有什么限制",
+      "target": "方案的适用边界与失效条件",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "用 LLM-as-judge 给 Agent 回答打分时，你怎么校准它和人工评分的一致性？阈值定在多"
+    },
+    {
+      "kind": "B",
+      "query": "如果数据量翻十倍会怎样",
+      "target": "数据规模增长后的性能与成本变化",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "数据规模增长后的性能与成本变化"
+    },
+    {
+      "kind": "B",
+      "query": "你怎么证明改进有效",
+      "target": "实验设计与指标对照的做法",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "项目上线后你怎么证明改动带来了收益？用的指标口径是什么，有没有被其他因素污染？"
+    },
+    {
+      "kind": "B",
+      "query": "团队里你负责哪部分",
+      "target": "个人贡献与协作分工的说明",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "你负责一条由研究员Agent、编码Agent、审核Agent组成的流水线。上线后发现两件事：审核Ag"
+    },
+    {
+      "kind": "C",
+      "query": "多头注意力机制",
+      "target": "multi-head attention 的计算复杂度和实际收益",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "多头注意力（Multi-Head Attention）相比单头注意力的实际收益是什么？为什么不是简单"
+    },
+    {
+      "kind": "C",
+      "query": "向量检索的索引结构",
+      "target": "vector index 的选择：HNSW 与 IVF 的取舍",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "文档更新后，你如何保证向量库里旧 chunk 被删掉而不是和新版本同时被召回？增量索引怎么设计？"
+    },
+    {
+      "kind": "C",
+      "query": "大模型的上下文窗口",
+      "target": "context window 长度对成本的影响",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "大模型已支持百万 token 上下文窗口，为什么仍然需要 RAG？"
+    },
+    {
+      "kind": "C",
+      "query": "提示词工程的常见坑",
+      "target": "prompt engineering 里的失败模式",
+      "a_hit": false,
+      "b_hit": false,
+      "b_top1": "用户输入往往口语化、含指代和精确 ID（报错码/文件名）。在设计 Agent 的上下文检索时，你会如"
+    },
+    {
+      "kind": "C",
+      "query": "模型微调和微调数据的配比",
+      "target": "fine-tuning 的数据配比与过拟合",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "fine-tuning 的数据配比与过拟合"
+    },
+    {
+      "kind": "C",
+      "query": "推理延迟怎么优化",
+      "target": "inference latency 的优化手段",
+      "a_hit": true,
+      "b_hit": true,
+      "b_top1": "inference latency 的优化手段"
+    }
+  ]
+}

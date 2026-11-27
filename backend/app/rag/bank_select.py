@@ -80,6 +80,50 @@ LEVEL_RANK = {"basic": 0, "advanced": 1, "expert": 2}
 WIDE_RECALL = int(os.environ.get("IA_RECALL_K") or 30)
 
 
+#: 已知话题名缓存（避免每次选题都查库）
+_TOPIC_CACHE: set[str] | None = None
+
+
+def _load_topics() -> set[str]:
+    """从题库读全部 topic 名。"""
+    global _TOPIC_CACHE
+    if _TOPIC_CACHE is not None:
+        return _TOPIC_CACHE
+
+    try:
+        from app.repos.pg import get_conn
+        with get_conn() as c:
+            cur = c.cursor()
+            cur.execute(
+                "SELECT DISTINCT topic FROM bank_questions "
+                "WHERE topic IS NOT NULL AND topic <> ''")
+            _TOPIC_CACHE = {str(r[0]) for r in cur.fetchall()}
+            cur.close()
+    except Exception as e:  # noqa: BLE001
+        log.warning("读话题列表失败（不启用 topic 过滤）：%s", e)
+        _TOPIC_CACHE = set()
+
+    return _TOPIC_CACHE
+
+
+def _looks_like_topic(query: str) -> bool:
+    """query 是否恰好是题库里的某个 topic。
+
+    ## 为什么必须精确匹配而不是"包含"
+
+    生产里 query 有几种来源：
+      · 话题名（"RAG"、"数据库索引"）      → 应该过滤
+      · 项目名（"课程问答助手"）           → 不该过滤（不是 topic）
+      · 兜底的空串                        → 不该过滤
+
+    用精确匹配最安全：只有恰好等于某个 topic 才过滤。
+    用 `in` 或模糊匹配会把项目名误判成话题，导致过滤后为空。
+    """
+    if not query:
+        return False
+    return query.strip() in _load_topics()
+
+
 def pick(
     query: str,
     role: str,
@@ -135,12 +179,39 @@ def pick(
     # 所以这里做了两件事控制成本：
     #   ① 用 WIDE_RECALL 常量（默认 40，不是 50）—— 覆盖 89% 已经够
     #   ② 兜底查询复用第一次结果，不再重查（见下面 _widened 逻辑）
+    # 是否把 query 当作话题名做精确过滤
+    #
+    # ## 为什么（实测数据，见 docs/RETRIEVAL-EXPERIMENT.md）
+    #
+    # 生产查询 = 状态机给的话题名（如 "RAG"）。但标为 topic='RAG' 的题，
+    # 问的是 "chunk 大小怎么定"、"RRF 的 k 取多少" —— 文本里没有 "RAG"。
+    #
+    # 实测：topic='RAG' 的题，question 含 "RAG" 的只有 2/8（25%）。
+    # 用 "RAG" 做向量检索匹配 question，命中率必然低。
+    #
+    # **题库有 topic 字段，却只做加权、没做过滤** —— 这是设计缺陷。
+    #
+    # ## 何时启用
+    #
+    # 只有当 query 恰好是已知 topic 时才过滤（用 `is_topic()` 判断）。
+    # 不能无条件把 query 当 topic —— 那时 query 可能是项目名，
+    # 过滤后一条都不剩。
+    use_topic_filter = _looks_like_topic(query)
+    topic_arg = query if use_topic_filter else ""
+
     recall_k = max(k, WIDE_RECALL)
-    candidates = retriever.search_bank(query, k=recall_k, role=role, use="select")
+    candidates = retriever.search_bank(query, k=recall_k, role=role,
+                                       use="select", topic=topic_arg)
+    if not candidates and use_topic_filter:
+        # 话题过滤后为空（可能该话题没有对应 role 的题）→ 退化为不过滤
+        log.info("话题 %r 过滤后为空，退化为全库检索", query)
+        candidates = retriever.search_bank(query, k=recall_k, role=role,
+                                           use="select")
     if not candidates:
         log.info("题库召回为空，query=%s role=%s", query[:40], role)
         return None
-    log.info("题库宽召回 %d 条（原 k=%d）", len(candidates), k)
+    log.info("题库宽召回 %d 条（k=%d, topic过滤=%s）",
+             len(candidates), recall_k, bool(topic_arg))
 
     # 长期画像 → 话题权重（没有画像就是空字典，不影响打分）
     weights: dict[str, float] = {}
