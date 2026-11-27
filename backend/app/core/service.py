@@ -274,7 +274,135 @@ def _build_report_now(sid: str, user: str) -> dict[str, Any]:
     return {"markdown": "（本场没有产生问答记录）", "dims": {}}
 
 
+def _round_highlight(label: str, turns: list[dict], t: dict, *,
+                     best: bool) -> str:
+    """生成"答得最好 / 最需要复盘"那一行的 Markdown。
+
+    ## 原来这里有两个问题（都被截图暴露了）
+
+    **① 硬截断**
+
+        f"—— {str(t.get('question') or '')[:60]}"
+
+    直接切 60 个字符，句子会在半截断掉：
+
+        "最需要复盘的：第 1 轮（1.3 分）—— 你好，我是本次面试官。流程四步：先请你简单自我介绍，然后针对简
+         历里的项目做深挖，接着几个技术问题，最后留时间给你反问。不"
+
+    最后那个孤零零的"不"就是被切掉的开头。
+
+    **② 用 question 当复盘对象，语义是错的**
+
+    候选人该复盘的是**自己的回答**，不是面试官的问句。
+    拿开场白当"最需要复盘的内容"，读者完全不知道这段回答哪里不好。
+
+    ## 现在的做法
+
+    问题 + 回答都展示，各自按**句子边界**截断（不切破句子）。
+    优先突出回答（那才是候选人该反思的），问题只作为上下文。
+    """
+    idx = turns.index(t) + 1
+    score = float(t.get("score") or 0)
+    q = _smart_truncate(str(t.get("question") or ""), 50)
+    a = _smart_truncate(str(t.get("answer") or ""), 90)
+
+    parts = [f"**{label}**：第 {idx} 轮（{score:.1f} 分）"]
+
+    if q:
+        parts.append(f"- 问：{q}")
+    if a:
+        # 回答是重点，用引用块突出
+        parts.append(f"- 答：{a}")
+    elif not q:
+        parts.append("- （本轮没有记录问答内容）")
+
+    return "\n".join(parts)
+
+
+def _smart_truncate(text: str, limit: int) -> str:
+    """按句子边界截断，不切破句子。
+
+    ## 为什么不用 `text[:n]`
+
+    直接切字符会得到半句话，读者看不懂。实测截出来的效果：
+
+        "…最后留时间给你反问。不"     ← 那个"不"是下一个词的开头
+
+    ## 做法
+
+    先在 limit 附近找句末标点（。！？；\n），有就从那里断；
+    没有就找逗号；再没有才硬切，并补省略号。
+
+    保留的正文长度控制在 limit 的 1.3 倍以内，
+    避免"找句号"把短句拼成长句。
+    """
+    text = (text or "").strip()
+    if not text:
+        return ""
+    if len(text) <= limit:
+        return text
+
+    # 在 limit 到 limit*1.3 的窗口里找句末标点
+    window_end = min(len(text), int(limit * 1.3))
+    segment = text[:window_end]
+
+    # ① 句末标点（优先级最高）
+    for mark in ("。", "！", "？", "；", "\n"):
+        pos = segment.rfind(mark)
+        if pos >= limit * 0.5:          # 断点不能太靠前
+            return text[:pos + 1].rstrip()
+
+    # ② 逗号（次选，至少是完整的分句）
+    for mark in ("，", "、", ",", "; "):
+        pos = segment.rfind(mark)
+        if pos >= limit * 0.6:
+            return text[:pos + 1].rstrip() + "…"
+
+    # ③ 实在没有标点，硬切并明确标注
+    return text[:limit].rstrip() + "…"
+
+
 def _attach_cost(report: dict[str, Any], sid: str) -> dict[str, Any]:
+    """把本场用量挂到报告上。
+
+    两个来源，优先用 RecordingLlm 的实时记账（按 session 归集，不会串账），
+    没有再退回"读旧日志"（时间窗方案，并发会混）。
+
+    为什么这么排：实测发现读日志方案拿不到数据（旧 LLMLogger 默认没启用），
+    而实时记账是调用返回值的直接统计，一定准。
+    """
+    try:
+        from app.core import usage
+        u = usage.snapshot(sid)
+    except Exception as e:  # noqa: BLE001
+        log.warning("读 usage 快照失败：%s", e)
+        u = {}
+
+    if not u or not u.get("calls"):
+        # 退回日志方案
+        try:
+            from app.core import cost as cost_mod
+            created = _session_created_at(sid)
+            if created:
+                return cost_mod.attach_to_report(report, created)
+        except Exception:  # noqa: BLE001
+            pass
+        return report
+
+    report["cost"] = u
+    md = str(report.get("markdown") or "")
+    if md:
+        tokens = u["tokens"]
+        calls = u["calls"]
+        money = u["cost_cny"]
+        report["markdown"] = (
+            md + "\n\n---\n本场用量：" + str(tokens) + " token"
+            + "（" + str(calls) + " 次模型调用），约 " + f"{money:.4f}" + " 元"
+        )
+    return report
+
+
+
     """把本场用量挂到报告上。
 
     两个来源，优先用 RecordingLlm 的实时记账（按 session 归集，不会串账），
@@ -374,13 +502,11 @@ def _report_from_turns(turns: list[dict]) -> dict[str, Any]:
     ]
 
     if strongest:
-        header.append(f"**答得最好的**：第 {turns.index(strongest[0]) + 1} 轮"
-                      f"（{float(strongest[0].get('score') or 0):.1f} 分）"
-                      f" —— {str(strongest[0].get('question') or '')[:60]}")
+        header.append(_round_highlight(
+            "答得最好的", turns, strongest[0], best=True))
     if weakest_rounds:
-        header.append(f"**最需要复盘的**：第 {turns.index(weakest_rounds[0]) + 1} 轮"
-                      f"（{float(weakest_rounds[0].get('score') or 0):.1f} 分）"
-                      f" —— {str(weakest_rounds[0].get('question') or '')[:60]}")
+        header.append(_round_highlight(
+            "最需要复盘的", turns, weakest_rounds[0], best=False))
     header.append("")
     header.append("## 逐轮记录")
 
