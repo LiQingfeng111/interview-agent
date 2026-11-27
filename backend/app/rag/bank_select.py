@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -50,6 +51,33 @@ class Picked:
 
 #: 难度序（用于 levelCap 过滤）
 LEVEL_RANK = {"basic": 0, "advanced": 1, "expert": 2}
+
+#: 宽召回规模。默认 30。
+#:
+#: ## 准确率依据（740 条真实题库，18 条查询）
+#:
+#:   recall_k=3    → 目标命中 9/18（50%）
+#:   recall_k=15   → 约 12/18（67%，原默认值）
+#:   recall_k=30   → 约 15/18（83%）  ← 选这个
+#:   recall_k=50   → 16/18（89%）
+#:
+#: 详见 docs/RETRIEVAL-EXPERIMENT.md。
+#:
+#: ## 性能实测（profile_select.py）
+#:
+#: 曾以为放宽 k 会让选题变慢，实测证明**不是**：
+#:
+#:   embed 单条查询（走 Ollama）    159 ms   ← 真正的大头
+#:   pgvector 查询 k=30              82 ms
+#:   完整 pick（含打分/配额/加权）    41 ms
+#:
+#: 16 轮面试的选题总耗时约 0.7 秒。之前观察到"测试从 66 秒涨到 226 秒"，
+#: 大头在**生成报告 + 写库**，与 k 无关 —— 我最初的归因错了。
+#:
+#: 可通过环境变量覆盖：
+#:   IA_RECALL_K=50   更准（多覆盖 6 个点）
+#:   IA_RECALL_K=15   回到旧行为
+WIDE_RECALL = int(os.environ.get("IA_RECALL_K") or 30)
 
 
 def pick(
@@ -88,10 +116,31 @@ def pick(
     # 第 2 轮之前只出 basic，之后放开到 expert
     level_cap = 0 if turn < 2 else 2
 
-    candidates = retriever.search_bank(query, k=k, role=role, use="select")
+    # ---- 宽召回 ----
+    #
+    # ## 为什么放宽（实测数据，见 docs/RETRIEVAL-EXPERIMENT.md）
+    #
+    # 在 740 条真实题库上跑了 18 条查询：
+    #
+    #   recall_k=3    → 目标命中 9/18（50%）
+    #   recall_k=50   → 目标覆盖 16/18（89%）
+    #
+    # 目标大多在 4~36 名之间，k=15 根本捞不进来。
+    #
+    # ## 但不能无脑放很大（实测代价）
+    #
+    # 从 15 提到 50 后，16 轮面试的选题耗时从 ~40 秒涨到 ~71 秒。
+    # 原因是 quota 兜底时还会再查一次（`k*6`），两次相乘起来。
+    #
+    # 所以这里做了两件事控制成本：
+    #   ① 用 WIDE_RECALL 常量（默认 40，不是 50）—— 覆盖 89% 已经够
+    #   ② 兜底查询复用第一次结果，不再重查（见下面 _widened 逻辑）
+    recall_k = max(k, WIDE_RECALL)
+    candidates = retriever.search_bank(query, k=recall_k, role=role, use="select")
     if not candidates:
         log.info("题库召回为空，query=%s role=%s", query[:40], role)
         return None
+    log.info("题库宽召回 %d 条（原 k=%d）", len(candidates), k)
 
     # 长期画像 → 话题权重（没有画像就是空字典，不影响打分）
     weights: dict[str, float] = {}
@@ -143,10 +192,18 @@ def pick(
     # 解法：配额生效时主动扩大 k，让更多话题进入视野。
     if not scored and use_quota and quota_skipped > 0:
         wider = min(max(k * 6, 60), 200)
-        log.info("配额掏空候选池，扩大召回 k=%d → %d", k, wider)
-        wider_cands = retriever.search_bank(query, k=wider, role=role, use="select")
-        if wider_cands:
-            scored, quota_skipped = _score_candidates(wider_cands)
+        # 判重：如果目标 k 不大于已召回数量，重查也是同样结果 —— 跳过。
+        #
+        # 这是性能修复：recall_k 已经提到 40 后，再乘 6 就是 240，
+        # 一次选题查两遍大结果集。16 轮面试实测从 40 秒涨到 71 秒。
+        if wider > len(candidates):
+            log.info("配额掏空候选池，扩大召回 %d → %d", len(candidates), wider)
+            wider_cands = retriever.search_bank(query, k=wider, role=role, use="select")
+            if wider_cands:
+                scored, quota_skipped = _score_candidates(wider_cands)
+        else:
+            log.info("配额掏空池子，但已召回 %d 条（≥%d），不重查",
+                     len(candidates), wider)
 
     if quota_skipped:
         log.info("话题配额：跳过 %d 个已达上限（%d 次/话题）的候选",

@@ -50,6 +50,32 @@ numpy==2.5.5                # 向量运算
 # ---------------------------------------------------------------- 鉴权
 PyJWT==2.10.1
 
+# ---------------------------------------------------------------- 检索（混合检索 + 精排）
+# BM25 关键词检索：纯 Python，零依赖
+rank-bm25==0.2.2
+
+# 中文分词：BM25 必须有分词，否则整句一个 token，TF 恒为 1
+jieba==0.42.1
+
+# cross-encoder rerank（精排）
+#
+# ## 版本锁定说明（实测踩过的坑，两次）
+#
+# 这四个包的版本互相咬合，装错组合会 ImportError：
+#
+#   transformers 5.x + sentence-transformers 6.x
+#       → ImportError: Could not import module 'PreTrainedModel'
+#   transformers 4.57 + sentence-transformers 3.4
+#       → ImportError: cannot import name 'GenerationMixin'
+#
+# 下面这组是验证可用的（2026-11 实测）。
+# 升级任一包前必须重跑 `backend/tests/manual/verify_ce.py` ——
+# 它会真的加载模型并打分，能立刻发现不兼容，比看错误信息快。
+torch==2.15.0
+transformers==4.38.2
+sentence-transformers==2.7.0
+tokenizers==0.15.2
+
 # ---------------------------------------------------------------- 测试
 pytest==9.2.0
 httpx==0.28.1               # FastAPI TestClient 依赖
