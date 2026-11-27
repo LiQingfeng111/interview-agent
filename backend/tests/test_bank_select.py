@@ -22,23 +22,27 @@ from app.rag import bank_select, retriever
 
 
 def _ready() -> bool:
-    try:
-        from app.repos.pg import pg_health
-        if not pg_health().get("ok"):
-            return False
-        from app.repos.pg import get_conn
-        with get_conn() as c:
-            cur = c.cursor()
-            cur.execute("SELECT COUNT(*) FROM bank_questions WHERE embedding IS NOT NULL")
-            n = cur.fetchone()[0]
-            cur.close()
-        return int(n) >= 100
-    except Exception:  # noqa: BLE001
-        return False
+    """能不能跑（PG + 题库向量 + 向量服务）。
+
+    ## 为什么加第三条（CI 红的教训）
+
+    原来只查了 PG 和题库向量。但 CI 环境把 `OLLAMA_BASE_URL`
+    指向 `http://127.0.0.1:1`（故意不可达），于是：
+
+        _ready() 返回 True → 测试继续跑
+        → search_bank 向量化失败 → 返回空（不抛异常）
+        → 断言失败
+
+    本地有 Ollama 时永远复现不了这个问题。
+
+    现在统一用 `tests/ready.semantic_ready()`，它包含向量服务探测。
+    """
+    from tests.ready import semantic_ready
+    return semantic_ready()
 
 
 pytestmark = pytest.mark.skipif(
-    not _ready(), reason="需要 PG + 已导入题库向量（bash ops.sh up && bash ops.sh bank）"
+    not _ready(), reason="需要 PG + 已导入题库向量 + 向量服务"
 )
 
 

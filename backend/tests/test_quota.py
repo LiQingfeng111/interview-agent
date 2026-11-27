@@ -26,19 +26,14 @@ from app.rag import bank_select, quota
 
 
 def _ready() -> bool:
-    try:
-        from app.repos.pg import pg_health
-        if not pg_health().get("ok"):
-            return False
-        from app.repos.pg import get_conn
-        with get_conn() as c:
-            cur = c.cursor()
-            cur.execute("SELECT COUNT(*) FROM bank_questions WHERE embedding IS NOT NULL")
-            n = cur.fetchone()[0]
-            cur.close()
-        return int(n) >= 100
-    except Exception:  # noqa: BLE001
-        return False
+    """能不能跑（PG + 题库向量 + 向量服务）。
+
+    CI 里 OLLAMA_BASE_URL 指向不可达地址，
+    原来只查 PG 会让测试"以为自己能跑"，然后向量化失败 → 断言红。
+    统一用 tests/ready.semantic_ready() 做判定。
+    """
+    from tests.ready import semantic_ready
+    return semantic_ready()
 
 
 pytestmark = pytest.mark.skipif(

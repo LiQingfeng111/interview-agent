@@ -49,9 +49,27 @@ def _bank_count() -> int:
         return 0
 
 
+def _ready() -> bool:
+    """PG + 题库向量 + **向量服务**。
+
+    ## 为什么必须加向量服务（CI 红的教训）
+
+    CI 把 `OLLAMA_BASE_URL` 指向 `http://127.0.0.1:1`（故意不可达）。
+    原来只查 PG 和题库向量，于是 `_ready()` 返回 True → 测试继续跑
+    → `search_bank` 里 `embed()` 失败 → 返回空列表（不抛异常）
+    → 断言 `hits[0].project == ...` 失败。
+
+    本地有 Ollama 时永远看不到这个问题。推送后 CI 红了 8 条才暴露。
+    """
+    if not _pg_ready() or _bank_count() < 100:
+        return False
+    from tests.ready import embedding_ready
+    return embedding_ready()
+
+
 pytestmark = pytest.mark.skipif(
-    not _pg_ready() or _bank_count() < 100,
-    reason="需要 PG 且题库已导入向量（跑 `bash ops.sh up && bash ops.sh bank`）",
+    not _ready(),
+    reason="需要 PG + 题库向量 + 向量服务（bash ops.sh up && bash ops.sh bank）",
 )
 
 
