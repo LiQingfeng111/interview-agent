@@ -241,6 +241,76 @@ class SessionRuntime:
         if evaluator is None:
             return {"verdict": "partial", "avg": 2.5, "evidence": "", "degraded": True}
 
+        # ---- 反问环节特殊处理（端到端实跑发现的缺陷）----
+        #
+        # ## 问题
+        #
+        # `CANDIDATE_ASK` 阶段问的是"你有哪些想问我的？"。
+        # 候选人这时说的话**不是技术回答**，而是提问。
+        #
+        # 但原来的代码对它和技术题一视同仁 —— 走同一套五维评分
+        # （accuracy/depth/tradeoff/boundary/clarity），按"回答的技术含量"打分。
+        #
+        # 实测后果（e2e 第 9 轮）：
+        #     问：你有哪些想问我的？
+        #     答：切块 500 字是 300/500/800 三档实测选的，召回 71%→82%…
+        #     评分：fail 1.9 分
+        #
+        # 这段话作为"技术回答"确实答非所问，但作为"反问"它也确实没提问 ——
+        # 两边都不该用技术维度评判。
+        #
+        # ## 危害
+        #
+        # 1. 误拉低总分：反问环节必扣分，让所有候选人的均分都偏低
+        # 2. 报告里"最需要复盘的"可能是反问环节 → 建议毫无意义
+        # 3. weakest 维度指向 clarity/depth，但这些维度对反问不适用
+        #
+        # ## 处理
+        #
+        # 反问环节不评分，但**记录**（要在报告里展示，不能凭空消失）。
+        # 用一个明确的标记 `scored=False`，下游据此跳过统计。
+        current_phase = ""
+        try:
+            current_phase = str(getattr(sm, "phase", "") or "")
+        except Exception:  # noqa: BLE001
+            current_phase = ""
+
+        if current_phase == "CANDIDATE_ASK":
+            log.info("反问环节不评分（候选人的提问不适用技术维度）")
+            # **但仍要 record()** —— 这一步不能省。
+            #
+            # ## 踩过的坑（E2E 实测）
+            #
+            # 第一版直接 return，没调 record()。后果：
+            #   sm.turn_in_phase 永远 0
+            #   → can_exit() 里 `turn_in_phase >= max_turns` 永远 False
+            #   → 但 min_turns=1 让 `turn_in_phase < min_turns` 也 False
+            #   → 于是提前 return 到第 163 行 `total_turns >= max_turns`
+            # 更糟的是：record() 还负责把 (q, a) 写进 sm.history，
+            # 不调它 → 下一轮出题时拿不到本轮问答 → **重复问同一句话**。
+            try:
+                record = getattr(sm, "record", None)
+                if callable(record):
+                    record(question, answer, "n/a")
+            except Exception as e:  # noqa: BLE001
+                log.warning("反问环节回写状态机失败：%s", e)
+
+            return {
+                "verdict": "n/a",        # 不是 pass/partial/fail 之一
+                "avg": 0.0,
+                "evidence": answer[:30] if answer else "",
+                "scored": False,         # 下游统计要跳过
+                "phase": current_phase,
+                "note": "反问环节，不参与技术评分",
+                "degraded": False,
+                "accuracy": 0.0,
+                "depth": 0.0,
+                "tradeoff": 0.0,
+                "boundary": 0.0,
+                "clarity": 0.0,
+                "weakest": "",
+            }
+
         # ---- 取对话历史（之前完全没传，是"评分只看当前一句"的根因）----
         #
         # 来源：状态机的 history（每轮 record() 会追加 {q, a, verdict}）

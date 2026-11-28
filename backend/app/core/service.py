@@ -451,17 +451,34 @@ def _report_from_turns(turns: list[dict]) -> dict[str, Any]:
     dims_acc: dict[str, list[float]] = {}
     verdict_count: dict[str, int] = {}
     lines: list[str] = []
+    unscored = 0          # 反问环节这类不参与评分的轮次
 
     for i, t in enumerate(turns, 1):
         verdict = str(t.get("verdict") or "")
         score = float(t.get("score") or 0)
-        verdict_count[verdict] = verdict_count.get(verdict, 0) + 1
+
+        # 反问环节（verdict="n/a"）不计入结论分布和均分
+        #
+        # 为什么要排除：`CANDIDATE_ASK` 阶段候选人的话是提问不是回答，
+        # 用技术维度评它必然低分（实测 fail 1.9）。
+        # 计入统计会让所有人的均分都被拉低，报告里"最需要复盘的"
+        # 还可能指向反问环节 —— 那条建议毫无意义。
+        is_scored = verdict not in ("n/a", "")
+        if is_scored:
+            verdict_count[verdict] = verdict_count.get(verdict, 0) + 1
+        else:
+            unscored += 1
 
         q = str(t.get("question") or "").strip()
         a = str(t.get("answer") or "").strip()
         phase = str(t.get("phase") or "")
 
-        lines.append(f"## 第 {i} 轮 · {verdict or '未评分'}（{score:.1f} 分）")
+        title = f"## 第 {i} 轮 · {verdict or '未评分'}"
+        if is_scored:
+            title += f"（{score:.1f} 分）"
+        else:
+            title += "（反问环节，不计分）"
+        lines.append(title)
         if phase:
             lines.append(f"阶段：{phase}")
         if q:
@@ -480,16 +497,22 @@ def _report_from_turns(turns: list[dict]) -> dict[str, Any]:
         # dims 存在 turns 表里没有单独列，从 score 反推不了维度；
         # 这里只在有的情况（未来加字段）才统计
         d = t.get("dims")
-        if isinstance(d, dict):
+        if is_scored and isinstance(d, dict):
             for k, v in d.items():
-                if isinstance(v, (int, float)):
+                if isinstance(v, (int, float)) and float(v) > 0:
                     dims_acc.setdefault(k, []).append(float(v))
 
-    scores = [float(t.get("score") or 0) for t in turns if t.get("score")]
+    scores = [
+        float(t.get("score") or 0)
+        for t in turns
+        if t.get("score") and str(t.get("verdict") or "") not in ("n/a", "")
+    ]
     avg = round(sum(scores) / len(scores), 2) if scores else 0.0
 
     weakest_rounds = sorted(
-        [t for t in turns if t.get("verdict") == "fail"],
+        [t for t in turns
+         if t.get("verdict") == "fail"
+         and float(t.get("score") or 0) > 0],
         key=lambda x: float(x.get("score") or 0),
     )
     strongest = sorted(

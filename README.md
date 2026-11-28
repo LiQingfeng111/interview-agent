@@ -722,6 +722,33 @@ bge-m3 的分布很保守：同义改写约 0.70，不相关约 0.40，**正负�
 后 3 轮: tokens=1504 calls=13   ← 跨重启累积正确
 ```
 
+### 5. 反问环节不参与技术评分
+
+`CANDIDATE_ASK` 阶段问的是"你有哪些想问我的？"，候选人说的是**提问**，不是技术回答。
+用 `accuracy/depth/tradeoff/boundary/clarity` 这套维度评它没有意义。
+
+**E2E 实跑暴露的两个连锁 bug**（都是同一个根因：没区分"评分"和"记录"）：
+
+| 现象 | 原因 | 修复 |
+|---|---|---|
+| 反问轮 `fail 1.9` 拉低均分 | 一视同仁走技术评分 | `verdict="n/a"`，统计时跳过 |
+| **同一句话问了 4 次** | 提前 return 没调 `sm.record()` → `turn_in_phase` 不累加 → 阶段推不动 + 下一轮拿不到 history | 短路后**仍 record** |
+
+修复后实测（12 轮上限）：
+
+```
+第 1-8 轮   正常评分  partial=5 fail=3
+第 9 轮     n/a       （反问，问完即收尾）
+均分        2.08      ← 只统计 8 轮，反问不参与
+```
+
+报告里这一轮**仍然展示**（标题写"反问环节，不计分"），不能凭空消失 ——
+否则读者会以为漏了一轮。但它不进结论分布、不进雷达图、不会被选为"最需要复盘的"。
+
+**这条能守住的关键**：`test_candidate_ask.py` 用 mock 验证
+`sm.record()` 被调用。第一版修复时我只改了评分、没改记录，
+E2E 立刻发现——单元测试容易漏掉"该调没调"这类缺陷，端到端跑一次才暴露。
+
 ---
 
 ## 项目结构
@@ -743,9 +770,20 @@ interview_agent/
 │   │   ├── api/                FastAPI 路由（31 个端点）
 │   │   ├── graph/              LangGraph 编排
 │   │   ├── rag/                检索（embedder/splitter/retriever/记忆）
+│   │   │   ├── hybrid.py         BM25 + RRF（**未启用**，见检索章节）
+│   │   │   └── rerank.py         cross-encoder（**未启用**）
 │   │   ├── repos/              PG + Redis
-│   │   └── core/               运行时/自检/成本
-│   └── tests/                  55 条测试
+│   │   └── core/               运行时/自检/成本/双轨评分
+│   └── tests/
+│       ├── ready.py            就绪判定（PG + 向量 + 向量服务三条件）
+│       ├── e2e_full.sh         完整端到端（注册→上传→面试→报告）
+│       └── ...                 156 条测试
+│
+├── tools/
+│   ├── preflight.sh            环境自检（基础设施/依赖/数据 三层）
+│   ├── run_py.sh               跑脚本前自动修好 PG/Ollama
+│   ├── pg_backup.sh            数据库备份/恢复
+│   └── create_user.sh          建/验证账号
 │
 ├── frontend/
 │   └── src/                    Vue 3（19 文件）
