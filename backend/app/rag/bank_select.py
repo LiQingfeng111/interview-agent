@@ -265,11 +265,15 @@ def pick(
         wider = min(max(k * 6, 60), 200)
         # 判重：如果目标 k 不大于已召回数量，重查也是同样结果 —— 跳过。
         #
-        # 这是性能修复：recall_k 已经提到 40 后，再乘 6 就是 240，
-        # 一次选题查两遍大结果集。16 轮面试实测从 40 秒涨到 71 秒。
+        # 这是性能修复：recall_k 提到 30 后，再乘 6 就是 180，
+        # 一次选题查两遍大结果集。
         if wider > len(candidates):
             log.info("配额掏空候选池，扩大召回 %d → %d", len(candidates), wider)
-            wider_cands = retriever.search_bank(query, k=wider, role=role, use="select")
+            # 扩大召回时**必须带上 topic** ——
+            # 否则一旦走到这个兜底分支，就退回"用话题名匹配题干文本"的老 bug
+            # （同话题占比从 100% 掉回 47%）。
+            wider_cands = retriever.search_bank(
+                query, k=wider, role=role, use="select", topic=topic_arg)
             if wider_cands:
                 scored, quota_skipped = _score_candidates(wider_cands)
         else:
@@ -322,6 +326,18 @@ def _is_duplicate_of_asked(hit: Any, asked_qids: list[str]) -> bool:
         if qid == hit.id:
             return True
         # 逐条比：把已问题目当查询，看候选题是否在它的近邻里
+        #
+        # ## 这里**刻意不加 topic 过滤**（别顺手改）
+        #
+        # 去重的目标是"不要问重复的考点"，而重复可能跨话题：
+        #   "RAG 的召回率怎么评估"  vs  "评测体系里召回指标怎么算"
+        # 这两道题在语义上是同一考点，但 topic 一个是 RAG、一个是评测。
+        #
+        # 加了 topic 过滤就只会比同话题内的题，跨话题的重复全漏。
+        #
+        # 而且这里比的是**题干与题干**的语义相似度（两边都是完整句子），
+        # 不存在"话题名 vs 题干"那个文本不对齐的问题 ——
+        # 那个问题只影响"用短话题名去检索"的场景。
         try:
             near = retriever.search_bank(
                 hit.text, k=5, use="dedup", threshold=th
